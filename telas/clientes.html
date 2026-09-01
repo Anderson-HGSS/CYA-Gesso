@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR" data-page="clientes" data-login-path="../index.html">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clientes | Sistema SCP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="../menu.html">
+                <span>CYA GESSO</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Abrir navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-lg-auto gap-lg-1">
+                    <li class="nav-item"><a class="nav-link" aria-current="page" href="../menu.html">Menu</a></li>
+                    <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a><ul class="dropdown-menu"><li><a class="dropdown-item active" aria-current="page" href="clientes.html">Clientes</a></li><li><a class="dropdown-item" href="categorias.html">Categorias</a></li><li><a class="dropdown-item" href="produtos.html">Produtos</a></li></ul></li>
+                    <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Orçamentos</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="orcamentos.html">Orçamentos</a></li></ul></li>
+                </ul>
+                <a class="btn btn-outline-light btn-sm ms-lg-3 mt-2 mt-lg-0" data-action="logout" href="../index.html">Sair</a>
+            </div>
+        </div>
+    </nav>
+    <main class="app-main">
+        <div class="container">
+            <header class="page-header d-sm-flex justify-content-between align-items-end">
+                <div><span class="page-kicker">Cadastros</span>
+                    <h1 class="page-title">Clientes</h1>
+                    <p class="page-subtitle">Gerencie a base de clientes da sua empresa.</p>
+                </div><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clienteModal">+ Novo
+                    Cliente</button>
+            </header>
+            <section class="surface-card p-0 overflow-hidden">
+                <div class="card-toolbar">
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <div class="input-group"><span class="input-group-text">⌕</span><input class="form-control"
+                                    type="search" aria-label="Pesquisar clientes"
+                                    placeholder="Pesquisar por nome, CPF/CNPJ ou e-mail"></div>
+                        </div>
+                        <div class="col-md-3"><select class="form-select" aria-label="Filtrar por status">
+                                <option>Todos os status</option>
+                                <option>Ativo</option>
+                                <option>Inativo</option>
+                            </select></div>
+                        <div class="col-md-2"><button class="btn btn-light w-100">Filtrar</button></div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome / Razão Social</th>
+                                <th>CPF/CNPJ</th>
+                                <th>Telefone</th>
+                                <th>E-mail</th>
+                                <th>Status</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#00125</td>
+                                <td><strong>Almeida Construções Ltda.</strong></td>
+                                <td>12.345.678/0001-90</td>
+                                <td>(11) 98765-4321</td>
+                                <td>contato@almeida.com</td>
+                                <td><span class="status-badge status-active">Ativo</span></td>
+                                <td class="text-end"><a class="action-button" href="#">Visualizar</a><a
+                                        class="action-button" href="#">Editar</a><a class="action-button text-danger"
+                                        href="#">Excluir</a></td>
+                            </tr>
+                            <tr>
+                                <td>#00124</td>
+                                <td><strong>Mariana Ferreira</strong></td>
+                                <td>123.456.789-00</td>
+                                <td>(11) 99876-2301</td>
+                                <td>mariana@email.com</td>
+                                <td><span class="status-badge status-active">Ativo</span></td>
+                                <td class="text-end"><a class="action-button" href="#">Visualizar</a><a
+                                        class="action-button" href="#">Editar</a><a class="action-button text-danger"
+                                        href="#">Excluir</a></td>
+                            </tr>
+                            <tr>
+                                <td>#00123</td>
+                                <td><strong>Comercial Nova Era S.A.</strong></td>
+                                <td>45.213.890/0001-06</td>
+                                <td>(11) 3123-7820</td>
+                                <td>vendas@novaera.com</td>
+                                <td><span class="status-badge status-inactive">Inativo</span></td>
+                                <td class="text-end"><a class="action-button" href="#">Visualizar</a><a
+                                        class="action-button" href="#">Editar</a><a class="action-button text-danger"
+                                        href="#">Excluir</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+    <div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="clienteModalTitle">Novo cliente</h2><button class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <form>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-8"><label class="form-label" for="cliente-nome">Nome / Razão Social <span
+                                        class="required">*</span></label><input class="form-control" id="cliente-nome">
+                            </div>
+                            <div class="col-md-4"><label class="form-label" for="cliente-doc">CPF/CNPJ</label><input
+                                    class="form-control" id="cliente-doc"></div>
+                            <div class="col-md-6"><label class="form-label" for="cliente-tel">Telefone</label><input
+                                    class="form-control" id="cliente-tel"></div>
+                            <div class="col-md-6"><label class="form-label" for="cliente-email">E-mail</label><input
+                                    class="form-control" id="cliente-email" type="email"></div>
+                            <div class="col-md-8"><label class="form-label"
+                                    for="cliente-endereco">Endereço</label><input class="form-control"
+                                    id="cliente-endereco"></div>
+                            <div class="col-md-4"><label class="form-label" for="cliente-numero">Número</label><input
+                                    class="form-control" id="cliente-numero"></div>
+                            <div class="col-md-4"><label class="form-label" for="cliente-comp">Complemento</label><input
+                                    class="form-control" id="cliente-comp"></div>
+                            <div class="col-md-4"><label class="form-label" for="cliente-bairro">Bairro</label><input
+                                    class="form-control" id="cliente-bairro"></div>
+                            <div class="col-md-4"><label class="form-label" for="cliente-cep">CEP</label><input
+                                    class="form-control" id="cliente-cep"></div>
+                            <div class="col-md-8"><label class="form-label" for="cliente-cidade">Cidade</label><input
+                                    class="form-control" id="cliente-cidade"></div>
+                            <div class="col-md-4"><label class="form-label" for="cliente-uf">Estado</label><select
+                                    class="form-select" id="cliente-uf">
+                                    <option selected>Selecione</option>
+                                    <option>SP</option>
+                                    <option>RJ</option>
+                                    <option>MG</option>
+                                </select></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-light" type="button"
+                            data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary"
+                            type="button">Salvar cliente</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+
+</html>

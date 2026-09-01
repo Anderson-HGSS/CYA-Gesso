@@ -1,0 +1,356 @@
+:root {
+    --scp-navy: #161616;
+    --scp-blue: #212121;
+    --scp-bg: #f5f5f5;
+    --scp-text: #202020;
+    --scp-muted: #6b6b6b;
+    --scp-border: #dedede;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    color: var(--scp-text);
+    background: var(--scp-bg);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-navbar {
+    min-height: 72px;
+    background: var(--scp-navy);
+    box-shadow: 0 2px 12px rgba(17, 38, 74, .12);
+}
+
+.app-navbar .navbar-brand {
+    letter-spacing: -.02em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 1.15rem;
+    font-weight: 800;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+}
+
+.app-navbar .nav-link {
+    color: rgba(255, 255, 255, .74);
+    border-radius: .45rem;
+    font-size: .92rem;
+    font-weight: 500;
+    padding: .55rem .78rem;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, .14);
+}
+
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, .4);
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 .2rem rgba(255, 255, 255, .2);
+}
+
+.app-main {
+    padding: 2rem 0 3rem;
+}
+
+.page-header {
+    margin-bottom: 1.75rem;
+}
+
+.page-kicker {
+    color: var(--scp-blue);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.page-title {
+    color: #1d2d46;
+    font-size: clamp(1.55rem, 3vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -.03em;
+    margin: .2rem 0;
+}
+
+.page-subtitle {
+    color: var(--scp-muted);
+    font-size: .94rem;
+    margin: 0;
+}
+
+.surface-card,
+.stat-card,
+.shortcut-card {
+    border: 1px solid var(--scp-border);
+    border-radius: .85rem;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(37, 55, 85, .035);
+}
+
+.surface-card {
+    padding: 1.25rem;
+}
+
+.stat-card {
+    height: 100%;
+    padding: 1.2rem;
+}
+
+.stat-label {
+    color: var(--scp-muted);
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.stat-value {
+    color: #1c2d48;
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: .35rem;
+}
+
+.stat-icon {
+    align-items: center;
+    background: #edf3ff;
+    border-radius: .65rem;
+    color: var(--scp-blue);
+    display: inline-flex;
+    font-size: 1.1rem;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+}
+
+.section-heading {
+    color: #26354d;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.shortcut-card {
+    color: inherit;
+    display: block;
+    height: 100%;
+    padding: 1.2rem;
+    text-decoration: none;
+    transition: border-color .15s ease, transform .15s ease;
+}
+
+.shortcut-card:hover {
+    border-color: #a9c5ff;
+    color: inherit;
+    transform: translateY(-2px);
+}
+
+.shortcut-icon {
+    color: var(--scp-blue);
+    font-size: 1.3rem;
+}
+
+.shortcut-card p {
+    color: var(--scp-muted);
+    font-size: .84rem;
+    margin-bottom: 0;
+}
+
+.btn {
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #181818;
+    border-color: #181818;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: #000;
+    border-color: #000;
+}
+
+.btn-light {
+    border-color: var(--scp-border);
+}
+
+.form-label {
+    color: #4a5870;
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.form-control,
+.form-select {
+    border-color: #d9e1ec;
+    color: var(--scp-text);
+    min-height: 42px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #8fb1f8;
+    box-shadow: 0 0 0 .2rem rgba(47, 111, 237, .13);
+}
+
+.input-group-text {
+    background: #f8fafc;
+    border-color: #d9e1ec;
+    color: var(--scp-muted);
+}
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--scp-text);
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background: #f7f9fc;
+    border-bottom: 1px solid var(--scp-border);
+    color: #68768d;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .85rem 1rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.table tbody td {
+    border-color: #eef1f5;
+    font-size: .88rem;
+    padding: .9rem 1rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.status-badge {
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .4em .75em;
+}
+
+.status-active,
+.status-approved {
+    background: #e6f6ee;
+    color: #167446;
+}
+
+.status-pending {
+    background: #fff3d9;
+    color: #a76500;
+}
+
+.status-inactive,
+.status-expired {
+    background: #f1f3f6;
+    color: #667085;
+}
+
+.action-button {
+    color: #65758e;
+    padding: .25rem .42rem;
+}
+
+.action-button:hover {
+    color: var(--scp-blue);
+}
+
+.card-toolbar {
+    border-bottom: 1px solid var(--scp-border);
+    padding: 1rem 1.25rem;
+}
+
+.login-page {
+    align-items: center;
+    background: #eef3fa;
+    display: flex;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.login-card {
+    border: 1px solid var(--scp-border);
+    border-radius: 1rem;
+    box-shadow: 0 16px 40px rgba(28, 52, 91, .12);
+    max-width: 450px;
+    padding: clamp(1.75rem, 5vw, 2.5rem);
+    width: 100%;
+}
+
+.login-brand {
+    color: var(--scp-navy);
+    font-size: 1.5rem;
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.login-description {
+    color: var(--scp-muted);
+    font-size: .93rem;
+}
+
+.login-footer {
+    color: var(--scp-muted);
+    font-size: .78rem;
+}
+
+.quote-total {
+    background: #f7faff;
+    border: 1px solid #dce8ff;
+    border-radius: .75rem;
+    color: var(--scp-navy);
+    padding: 1rem 1.25rem;
+}
+
+.quote-total strong {
+    font-size: 1.35rem;
+}
+
+.required {
+    color: #dc3545;
+}
+
+.app-alert { position: fixed; right: 1rem; top: 1rem; z-index: 2000; max-width: 420px; }
+.action-panel { max-width: 560px; }
+
+@media (max-width:991.98px) {
+    .app-navbar .navbar-brand {
+        left: auto;
+        position: static;
+        transform: none;
+    }
+
+    .app-navbar .navbar-collapse {
+        background: var(--scp-navy);
+        padding: .5rem 0 1rem;
+    }
+}
+
+@media (max-width:575.98px) {
+    .app-main {
+        padding-top: 1.35rem;
+    }
+
+    .surface-card {
+        padding: 1rem;
+    }
+
+    .page-header .btn {
+        width: 100%;
+        margin-top: 1rem;
+    }
+}
