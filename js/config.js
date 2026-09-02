@@ -2,19 +2,60 @@
 export const SUPABASE_URL = 'https://bymwinebienzvaimiadh.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_qPjGkoVq70xT2cqCd0jDVw_RJWWxeJg';
 
-// Nomes reais do banco existente. Não são usados para criar ou alterar tabelas.
+// Nomes das tabelas e campos do banco em minúsculo.
 export const DB = {
-  usuarios: 'USUARIOS',
-  clientes: 'CLIENTE',
-  categorias: 'CATEGORIA_PRODUTO',
-  produtos: 'PRODUTO',
-  orcamentos: 'ORCAMENTO',
-  itensOrcamento: 'ORCAMENTO_ITEM',
+  usuarios: 'usuarios',
+  clientes: 'cliente',
+  categorias: 'categoria_produto',
+  produtos: 'produto',
+  orcamentos: 'orcamento',
+  itensOrcamento: 'orcamento_item',
+
   fields: {
-    cliente: { id: 'CLIENTEID', tipo: 'TIPO_CLIENTE', documento: 'CPF_CNPJ_CLIENTE', nome: 'NOME_CLIENTE' },
-    categoria: { id: 'CATEGORIAPRODUTOID', descricao: 'DS_CATEGORIA_PRODUTO' },
-    produto: { id: 'PRODUTOID', categoriaId: 'CATEGORIAPRODUTOID', descricao: 'DS_PRODUTO', observacao: 'OBS_PRODUTO', valorVenda: 'VL_VENDA_PRODUTO', dataCadastro: 'DT_CADASTRO_PRODUTO', status: 'STATUS_PRODUTO' },
-    orcamento: { id: 'ORCAMENTOID', clienteId: 'CLIENTEID', data: 'DT_ORCAMENTO', validade: 'DT_VALIDADE_ORCAMENTO', total: 'VL_TOTAL_ORCAMENTO' },
-    item: { orcamentoId: 'ORCAMENTOID', id: 'ORCAMENTOITEMID', produtoId: 'PRODUTOID', produtoDescricao: 'PRODUTODESC', quantidade: 'QT_PRODUTO', valorUnitario: 'VL_UNITARIO', valorTotal: 'VL_TOTAL' }
+    usuarios: {
+      id: 'id',
+      usuario: 'usuario',
+      nomeCompleto: 'nome_completo',
+      senha: 'senha'
+    },
+    cliente: {
+      id: 'clienteid',
+      tipo: 'tipo_cliente',
+      documento: 'cpf_cnpj_cliente',
+      nome: 'nome_cliente'
+    },
+
+    categoria: {
+      id: 'categoriaprodutoid',
+      descricao: 'ds_categoria_produto'
+    },
+
+    produto: {
+      id: 'produtoid',
+      categoriaId: 'categoriaprodutoid',
+      descricao: 'ds_produto',
+      observacao: 'obs_produto',
+      valorVenda: 'vl_venda_produto',
+      dataCadastro: 'dt_cadastro_produto',
+      status: 'status_produto'
+    },
+
+    orcamento: {
+      id: 'orcamentoid',
+      clienteId: 'clienteid',
+      data: 'dt_orcamento',
+      validade: 'dt_validade_orcamento',
+      total: 'vl_total_orcamento'
+    },
+
+    item: {
+      orcamentoId: 'orcamentoid',
+      id: 'orcamentoitemid',
+      produtoId: 'produtoid',
+      produtoDescricao: 'produtodesc',
+      quantidade: 'qt_produto',
+      valorUnitario: 'vl_unitario',
+      valorTotal: 'vl_total'
+    }
   }
 };

@@ -29,7 +29,6 @@ body {
     font-size: 1.15rem;
     font-weight: 800;
     left: 50%;
-    position: absolute;
     transform: translateX(-50%);
 }
 
