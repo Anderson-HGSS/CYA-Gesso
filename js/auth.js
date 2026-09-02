@@ -3,6 +3,7 @@ import { supabase } from './supabase.js';
 const root = document.documentElement;
 const isLogin = root.dataset.page === 'login';
 const loginPath = root.dataset.loginPath || 'index.html';
+const SESSION_KEY = 'cyaGessoUsuarioLogado';
 
 export function showMessage(text, kind = 'danger') {
   let alert = document.getElementById('app-alert');
@@ -11,33 +12,45 @@ export function showMessage(text, kind = 'danger') {
   alert.innerHTML = `${text}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>`;
 }
 
-export async function requireAuth() {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error || !session) window.location.replace(loginPath);
+function getPrototypeSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); }
+  catch { sessionStorage.removeItem(SESSION_KEY); return null; }
+}
+
+export function getCurrentUser() { return getPrototypeSession(); }
+
+export function requireAuth() {
+  const session = getPrototypeSession();
+  if (!session) window.location.replace(loginPath);
   return session;
 }
 
-export async function logout(event) {
+export function logout(event) {
   event?.preventDefault();
-  const { error } = await supabase.auth.signOut();
-  if (error) showMessage('Não foi possível encerrar a sessão. Tente novamente.');
-  else window.location.replace(loginPath);
+  sessionStorage.removeItem(SESSION_KEY);
+  window.location.replace(loginPath);
 }
+
+function quoteFilterValue(value) { return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`; }
 
 async function initLogin() {
   const form = document.getElementById('login-form');
-  const recovery = document.getElementById('forgot-password');
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) window.location.replace('menu.html');
+  if (getPrototypeSession()) window.location.replace('menu.html');
   form?.addEventListener('submit', async event => {
     event.preventDefault();
-    const button = form.querySelector('[type="submit"]'); button.disabled = true;
-    const { error } = await supabase.auth.signInWithPassword({ email: form.email.value.trim(), password: form.password.value });
+    const button = form.querySelector('[type="submit"]');
+    const usuarioInformado = form.usuario.value.trim();
+    const senhaInformada = form.password.value;
+    button.disabled = true;
+    const filter = quoteFilterValue(usuarioInformado);
+    const { data, error } = await supabase.from('usuarios').select('id, usuario, nome_completo, senha').or(`usuario.eq.${filter},nome_completo.eq.${filter}`).limit(1);
     button.disabled = false;
-    if (error) showMessage(error.message);
-    else window.location.replace('menu.html');
+    if (error) { console.error(error); return showMessage('Não foi possível realizar o login. Tente novamente.'); }
+    const usuario = data?.[0];
+    if (!usuario || usuario.senha !== senhaInformada) return showMessage('Usuário ou senha incorretos.');
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: usuario.id, nome: usuario.nome, nome_completo: usuario.nome_completo, isAdmin: usuario.nome === 'Admin' && senhaInformada === 'A' }));
+    window.location.replace('menu.html');
   });
-  recovery?.addEventListener('click', event => { event.preventDefault(); window.location.href = 'esqueci-senha.html'; });
 }
 
-if (isLogin) initLogin();
+if (isLogin) {initLogin()};

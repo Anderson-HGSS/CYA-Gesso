@@ -1,2 +1,148 @@
 <!doctype html>
-<html lang="pt-BR" data-page="orcamentos" data-login-path="../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Orçamentos | CYA GESSO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="../css/style.css"></head><body><nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top"><div class="container"><a class="navbar-brand fw-semibold" href="../menu.html">CYA GESSO</a><div class="collapse navbar-collapse show"><ul class="navbar-nav ms-lg-auto gap-lg-1"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Cadastros</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="clientes.html">Clientes</a></li><li><a class="dropdown-item" href="categorias.html">Categorias</a></li><li><a class="dropdown-item" href="produtos.html">Produtos</a></li></ul></li><li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown">Orçamentos</a><ul class="dropdown-menu"><li><a class="dropdown-item active" href="orcamentos.html">Orçamentos</a></li></ul></li><li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Manutenção</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="usuarios.html">Cadastrar Usuário</a></li></ul></li></ul><a class="btn btn-outline-light btn-sm ms-lg-3" data-action="logout" href="../index.html">Sair</a></div></div></nav><main class="app-main"><div class="container"><header class="page-header d-sm-flex justify-content-between align-items-end"><div><span class="page-kicker">Comercial</span><h1 class="page-title">Orçamentos</h1><p class="page-subtitle">Consulte propostas realizadas ou crie um novo orçamento.</p></div><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orcamentoModal">+ Novo Orçamento</button></header><section class="surface-card p-0 overflow-hidden"><div class="card-toolbar d-flex justify-content-between"><h2 class="section-heading">Orçamentos realizados</h2><span class="small text-secondary" data-record-count>0 registros</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Número</th><th>Cliente</th><th>Data</th><th>Validade</th><th>Valor total</th><th class="text-end">Ações</th></tr></thead><tbody data-records data-columns="6"></tbody></table></div></section></div></main><div class="modal fade" id="orcamentoModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5">Novo orçamento</h2><button class="btn-close" data-bs-dismiss="modal"></button></div><form><div class="modal-body"><div class="row g-3 mb-4"><div class="col-lg-6"><label class="form-label" for="orc-cliente">Cliente *</label><select class="form-select" id="orc-cliente"><option value="">Carregando clientes…</option></select></div><div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-data">Data *</label><input class="form-control" id="orc-data" type="date"></div><div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-validade">Validade *</label><input class="form-control" id="orc-validade" type="date"></div></div><div class="d-flex justify-content-between align-items-center mb-2"><h3 class="section-heading">Itens do orçamento</h3><button class="btn btn-outline-primary btn-sm" type="button" data-add-item>+ Adicionar item</button></div><div class="table-responsive border rounded"><table class="table mb-0"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th><th></th></tr></thead><tbody id="budget-items"></tbody></table></div><div class="quote-total text-end mt-3"><span class="d-block small">Total geral</span><strong id="orc-total">R$ 0,00</strong></div></div><div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="button" data-save>Salvar orçamento</button></div></form></div></div></div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script type="module" src="../js/app.js"></script></body></html>
+<html lang="pt-BR" data-page="orcamentos" data-login-path="../index.html">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orçamentos | CYA GESSO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="../menu.html">
+                <span>CYA GESSO</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Abrir navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-lg-auto gap-lg-1">
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Cadastros</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="clientes.html">Clientes</a></li>
+                            <li><a class="dropdown-item" href="categorias.html">Categorias</a></li>
+                            <li><a class="dropdown-item" href="produtos.html">Produtos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Orçamentos</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="orcamentos.html">Orçamentos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Manutenção</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="usuarios.html">Cadastrar Usuário</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <a class="btn btn-outline-light btn-sm ms-lg-3 mt-2 mt-lg-0" data-action="logout"
+                    href="index.html">Sair</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="app-main">
+        <div class="container">
+            <header class="page-header d-sm-flex justify-content-between align-items-end">
+                <div><span class="page-kicker">Comercial</span>
+                    <h1 class="page-title">Orçamentos</h1>
+                    <p class="page-subtitle">Consulte propostas realizadas ou crie um novo orçamento.</p>
+                </div><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orcamentoModal">+ Novo
+                    Orçamento</button>
+            </header>
+            <div class="mb-3"><input class="form-control" data-search type="search"
+                    placeholder="Pesquisar por número ou cliente..." aria-label="Pesquisar orçamentos"></div>
+            <section class="surface-card p-0 overflow-hidden">
+                <div class="card-toolbar d-flex justify-content-between">
+                    <h2 class="section-heading">Orçamentos realizados</h2><span class="small text-secondary"
+                        data-record-count>0 registros</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Validade</th>
+                                <th>Valor total</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody data-records data-columns="6"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+    <div class="modal fade" id="orcamentoModal">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5">Novo orçamento</h2><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <form>
+                    <div class="modal-body">
+                        <div class="row g-3 mb-4">
+                            <div class="col-lg-6"><label class="form-label" for="orc-cliente">Cliente *</label><select
+                                    class="form-select" id="orc-cliente">
+                                    <option value="">Carregando clientes…</option>
+                                </select></div>
+                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-data">Data *</label><input
+                                    class="form-control" id="orc-data" type="date"></div>
+                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-validade">Validade
+                                    *</label><input class="form-control" id="orc-validade" type="date"></div>
+                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-desconto">Desconto
+                                    (%)</label><input class="form-control" id="orc-desconto" type="number" min="0"
+                                    max="100" step="0.01" value="0"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="section-heading">Itens do orçamento</h3><button
+                                class="btn btn-outline-primary btn-sm" type="button" data-add-item>+ Adicionar
+                                item</button>
+                        </div>
+                        <div class="table-responsive border rounded">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Quantidade</th>
+                                        <th>Preço unitário</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="budget-items"></tbody>
+                            </table>
+                        </div>
+                        <div class="quote-total d-flex justify-content-between mt-3"><span class="d-block small">Subtotal: <strong
+                                    id="orc-subtotal">R$ 0,00</strong></span><span class="d-block small">Desconto:
+                                <strong id="orc-discount-rate">0,00%</strong></span><span class="d-block small">Valor do
+                                desconto: <strong id="orc-discount-value">R$ 0,00</strong></span><span
+                                class="d-block small">Total: <strong id="orc-total">R$ 0,00</strong></span></div>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-light" type="button"
+                            data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="button"
+                            data-save>Salvar orçamento</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+
+</html>

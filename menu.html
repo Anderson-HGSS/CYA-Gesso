@@ -11,8 +11,9 @@
 </head>
 
 <!-- CORREÇÃO 1: Transformamos o body em um container flexível vertical de altura total -->
+
 <body class="d-flex flex-column min-vh-100">
-    
+
     <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
         <div class="container">
             <a class="navbar-brand" href="menu.html">
@@ -22,24 +23,36 @@
                 aria-controls="mainNav" aria-expanded="false" aria-label="Abrir navegação">
                 <span class="navbar-toggler-icon"></span>
             </button>
-      <div class="collapse navbar-collapse" id="mainNav">
-        <ul class="navbar-nav ms-lg-auto gap-lg-1">
-          
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a>
-            <ul class="dropdown-menu"><li><a class="dropdown-item" href="telas/clientes.html">Clientes</a></li><li><a class="dropdown-item" href="telas/categorias.html">Categorias</a></li><li><a class="dropdown-item" href="telas/produtos.html">Produtos</a></li></ul>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Orçamentos</a>
-            <ul class="dropdown-menu"><li><a class="dropdown-item" href="telas/orcamentos.html">Orçamentos</a></li></ul>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Manutenção</a>
-            <ul class="dropdown-menu"><li><a class="dropdown-item" href="telas/usuarios.html">Cadastrar Usuário</a></li></ul>
-          </li>
-        </ul>
-        <a class="btn btn-outline-light btn-sm ms-lg-3 mt-2 mt-lg-0" data-action="logout" href="index.html">Sair</a>
-      </div>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-lg-auto gap-lg-1">
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Cadastros</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="telas/clientes.html">Clientes</a></li>
+                            <li><a class="dropdown-item" href="telas/categorias.html">Categorias</a></li>
+                            <li><a class="dropdown-item" href="telas/produtos.html">Produtos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Orçamentos</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="telas/orcamentos.html">Orçamentos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Manutenção</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="telas/usuarios.html">Cadastrar Usuário</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <a class="btn btn-outline-light btn-sm ms-lg-3 mt-2 mt-lg-0" data-action="logout"
+                    href="index.html">Sair</a>
+            </div>
         </div>
     </nav>
 

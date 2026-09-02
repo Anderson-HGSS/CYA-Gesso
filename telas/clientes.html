@@ -1,5 +1,120 @@
 <!doctype html>
-<html lang="pt-BR" data-page="clientes" data-login-path="../index.html"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Clientes | CYA GESSO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="../css/style.css"></head>
-<body><nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top"><div class="container"><a class="navbar-brand fw-semibold" href="../menu.html">CYA GESSO</a><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button><div class="collapse navbar-collapse" id="mainNav"><ul class="navbar-nav ms-lg-auto gap-lg-1"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown">Cadastros</a><ul class="dropdown-menu"><li><a class="dropdown-item active" href="clientes.html">Clientes</a></li><li><a class="dropdown-item" href="categorias.html">Categorias</a></li><li><a class="dropdown-item" href="produtos.html">Produtos</a></li></ul></li><li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Orçamentos</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="orcamentos.html">Orçamentos</a></li></ul></li><li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Manutenção</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="usuarios.html">Cadastrar Usuário</a></li></ul></li></ul><a class="btn btn-outline-light btn-sm ms-lg-3 mt-2 mt-lg-0" data-action="logout" href="../index.html">Sair</a></div></div></nav>
-<main class="app-main"><div class="container"><header class="page-header d-sm-flex justify-content-between align-items-end"><div><span class="page-kicker">Cadastros</span><h1 class="page-title">Clientes</h1><p class="page-subtitle">Gerencie a base de clientes da sua empresa.</p></div><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clienteModal">+ Novo Cliente</button></header><section class="surface-card p-0 overflow-hidden"><div class="card-toolbar d-flex justify-content-between"><h2 class="section-heading">Clientes cadastrados</h2><span class="small text-secondary" data-record-count>0 registros</span></div><div class="table-responsive"><table class="table"><thead><tr><th>Código</th><th>Nome / Razão Social</th><th>Tipo</th><th>CPF/CNPJ</th><th class="text-end">Ações</th></tr></thead><tbody data-records data-columns="5"></tbody></table></div></section></div></main>
-<div class="modal fade" id="clienteModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5">Novo cliente</h2><button class="btn-close" data-bs-dismiss="modal"></button></div><form><div class="modal-body row g-3"><div class="col-md-8"><label class="form-label" for="cliente-nome">Nome / Razão Social *</label><input class="form-control" id="cliente-nome"></div><div class="col-md-4"><label class="form-label" for="cliente-tipo">Tipo *</label><select class="form-select" id="cliente-tipo"><option value="">Selecione</option><option value="F">Pessoa física</option><option value="J">Pessoa jurídica</option></select></div><div class="col-12"><label class="form-label" for="cliente-doc">CPF/CNPJ *</label><input class="form-control" id="cliente-doc"></div></div><div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="button" data-save>Salvar cliente</button></div></form></div></div></div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script type="module" src="../js/app.js"></script></body></html>
+<html lang="pt-BR" data-page="clientes" data-login-path="../index.html">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clientes | CYA GESSO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="../menu.html">
+                <span>CYA GESSO</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Abrir navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-lg-auto gap-lg-1">
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Cadastros</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="clientes.html">Clientes</a></li>
+                            <li><a class="dropdown-item" href="categorias.html">Categorias</a></li>
+                            <li><a class="dropdown-item" href="produtos.html">Produtos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Orçamentos</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="orcamentos.html">Orçamentos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Manutenção</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="usuarios.html">Cadastrar Usuário</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <a class="btn btn-outline-light btn-sm ms-lg-3 mt-2 mt-lg-0" data-action="logout"
+                    href="index.html">Sair</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="app-main">
+        <div class="container">
+            <header class="page-header d-sm-flex justify-content-between align-items-end">
+                <div><span class="page-kicker">Cadastros</span>
+                    <h1 class="page-title">Clientes</h1>
+                    <p class="page-subtitle">Gerencie a base de clientes da sua empresa.</p>
+                </div><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clienteModal">+ Novo
+                    Cliente</button>
+            </header>
+            <div class="mb-3"><input class="form-control" data-search type="search"
+                    placeholder="Pesquisar por nome ou CPF/CNPJ..." aria-label="Pesquisar clientes"></div>
+            <section class="surface-card p-0 overflow-hidden">
+                <div class="card-toolbar d-flex justify-content-between">
+                    <h2 class="section-heading">Clientes cadastrados</h2><span class="small text-secondary"
+                        data-record-count>0 registros</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome / Razão Social</th>
+                                <th>Tipo</th>
+                                <th>CPF/CNPJ</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody data-records data-columns="5"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+    <div class="modal fade" id="clienteModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5">Novo cliente</h2><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <form>
+                    <div class="modal-body row g-3">
+                        <div class="col-md-8"><label class="form-label" for="cliente-nome">Nome / Razão Social
+                                *</label><input class="form-control" id="cliente-nome"></div>
+                        <div class="col-md-4"><label class="form-label" for="cliente-tipo">Tipo *</label><select
+                                class="form-select" id="cliente-tipo">
+                                <option value="">Selecione</option>
+                                <option value="F">Pessoa física</option>
+                                <option value="J">Pessoa jurídica</option>
+                            </select></div>
+                        <div class="col-12"><label class="form-label" for="cliente-doc">CPF/CNPJ *</label><input
+                                class="form-control" id="cliente-doc"></div>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-light" type="button"
+                            data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="button"
+                            data-save>Salvar cliente</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+
+</html>

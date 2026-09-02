@@ -14,7 +14,7 @@ export const DB = {
   fields: {
     usuarios: {
       id: 'id',
-      usuario: 'usuario',
+      nome: 'usuario',
       nomeCompleto: 'nome_completo',
       senha: 'senha'
     },
