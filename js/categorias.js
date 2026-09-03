@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_qPjGkoVq70xT2cqCd0jDVw_RJWWxeJg';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = 'cyaGessoUsuarioLogado';
 let categoriaEmEdicao = null;
+let paginaAtual = 1;
+const REGISTROS_POR_PAGINA = 4;
 
 const esc = (valor) => 
   String(valor ?? '').replace(/[&<>"']/g, (c) => ({ 
@@ -32,12 +34,25 @@ function mostrarMensagem(texto, tipo = 'danger') {
   a.innerHTML = `${texto}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`; 
 }
 
+function mostrarErroBanco(contexto, erro) {
+  const detalhes = [erro?.message, erro?.details, erro?.hint].filter(Boolean).join(' ');
+  console.error(contexto, erro);
+  mostrarMensagem(`${contexto} Detalhes: ${detalhes || 'erro sem detalhes retornados.'}`);
+}
+
 function configurarSaida() { 
   document.querySelector('[data-action="logout"]')?.addEventListener('click', (e) => { 
     e.preventDefault(); 
     sessionStorage.removeItem(SESSION_KEY); 
     window.location.replace('../index.html'); 
   }); 
+}
+
+function renderizarPaginacaoCategorias(total) {
+  let navegacao = document.getElementById('paginacao-categorias');
+  if (!navegacao) { navegacao = document.createElement('nav'); navegacao.id = 'paginacao-categorias'; navegacao.className = 'mt-3'; document.querySelector('[data-records]').closest('section').after(navegacao); }
+  const paginas = Math.ceil(total / REGISTROS_POR_PAGINA); if (paginaAtual > paginas) paginaAtual = Math.max(1, paginas);
+  navegacao.innerHTML = paginas > 1 ? `<ul class="pagination justify-content-end mb-0">${Array.from({ length: paginas }, (_, i) => `<li class="page-item ${paginaAtual === i + 1 ? 'active' : ''}"><button class="page-link" data-pagina-categoria="${i + 1}">${i + 1}</button></li>`).join('')}</ul>` : '';
 }
 
 async function carregarCategorias(pesquisa = '') { 
@@ -52,11 +67,13 @@ async function carregarCategorias(pesquisa = '') {
   const { data, error } = await consulta; 
   const corpo = document.querySelector('[data-records]'); 
 
-  if (error) return mostrarMensagem('Não foi possível carregar as categorias.'); 
+  if (error) return mostrarErroBanco('Não foi possível carregar as categorias.', error); 
 
   document.querySelector('[data-record-count]').textContent = `${data.length} ${data.length === 1 ? 'registro' : 'registros'}`; 
 
-  corpo.innerHTML = data.length ? data.map((categoria) => 
+  renderizarPaginacaoCategorias(data.length);
+  const categoriasDaPagina = data.slice((paginaAtual - 1) * REGISTROS_POR_PAGINA, paginaAtual * REGISTROS_POR_PAGINA);
+  corpo.innerHTML = data.length ? categoriasDaPagina.map((categoria) => 
     `<tr>` +
       `<td>${categoria.categoriaprodutoid}</td>` +
       `<td><strong>${esc(categoria.ds_categoria_produto)}</strong></td>` +
@@ -96,10 +113,17 @@ async function editarCategoria(id) {
 }
 
 async function excluirCategoria(id) { 
+  const { data: produtos, error: erroProdutos } = await supabase.from('produto').select('produtoid').eq('categoriaprodutoid', id);
+  if (erroProdutos) return mostrarMensagem('Não foi possível verificar os produtos da categoria.');
+  if (produtos.length) {
+    const { data: itens, error: erroItens } = await supabase.from('orcamento_item').select('produtoid').in('produtoid', produtos.map((produto) => produto.produtoid)).limit(1);
+    if (erroItens) return mostrarMensagem('Não foi possível verificar os orçamentos da categoria.');
+    if (itens.length) return mostrarMensagem('Não é possível excluir esta categoria porque existem produtos desta categoria utilizados em orçamentos.');
+  }
   if (!window.confirm('Tem certeza que deseja excluir esta categoria?')) return; 
 
   const { error } = await supabase.from('categoria_produto').delete().eq('categoriaprodutoid', id); 
-  if (error) return mostrarMensagem('Não foi possível excluir a categoria.'); 
+  if (error) return mostrarMensagem('Não foi possível excluir a categoria, pois ela está vinculada a um produto.'); 
 
   mostrarMensagem('Categoria excluída com sucesso.', 'success'); 
   carregarCategorias(document.querySelector('[data-search]').value); 
@@ -109,12 +133,13 @@ if (verificarSessao()) {
   configurarSaida(); 
   carregarCategorias(); 
 
-  document.querySelector('[data-search]').addEventListener('input', (e) => carregarCategorias(e.target.value)); 
+  document.querySelector('[data-search]').addEventListener('input', (e) => { paginaAtual = 1; carregarCategorias(e.target.value); }); 
   document.querySelector('[data-save]').addEventListener('click', cadastrarCategoria); 
 
   document.addEventListener('click', (e) => { 
     if (e.target.dataset.edit) editarCategoria(e.target.dataset.edit); 
     if (e.target.dataset.delete) excluirCategoria(e.target.dataset.delete); 
+    if (e.target.dataset.paginaCategoria) { paginaAtual = Number(e.target.dataset.paginaCategoria); carregarCategorias(document.querySelector('[data-search]').value); }
   }); 
 
   document.getElementById('categoriaModal').addEventListener('hidden.bs.modal', () => { 

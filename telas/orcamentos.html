@@ -141,12 +141,8 @@
                 <form>
                     <div class="modal-body">
                         <div class="row g-3 mb-4">
-                            <div class="col-lg-6"><label class="form-label" for="orc-cliente">Cliente *</label><select
-                                    class="form-select" id="orc-cliente">
-                                    <option value="">Carregando clientes…</option>
-                                </select></div>
-                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-data">Data *</label><input
-                                    class="form-control" id="orc-data" type="date"></div>
+                            <div class="col-lg-6"><label class="form-label" for="orc-cliente">Cliente *</label><input
+                                    class="form-control" id="orc-cliente" list="orc-clientes" placeholder="Digite o nome do cliente..."><datalist id="orc-clientes"></datalist><input type="hidden" id="orc-cliente-id"></div>
                             <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-validade">Validade
                                     *</label><input class="form-control" id="orc-validade" type="date"></div>
                             <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-desconto">Desconto

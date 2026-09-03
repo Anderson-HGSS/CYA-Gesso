@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_qPjGkoVq70xT2cqCd0jDVw_RJWWxeJg';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = 'cyaGessoUsuarioLogado';
 let usuarioEmEdicao = null;
+let paginaAtual = 1;
+const REGISTROS_POR_PAGINA = 4;
 
 const esc = (v) => 
   String(v ?? '').replace(/[&<>"']/g, (c) => ({ 
@@ -41,6 +43,12 @@ function mensagem(t, tipo = 'danger') {
   a.innerHTML = `${t}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`; 
 }
 
+function mostrarErroBanco(contexto, erro) {
+  const detalhes = [erro?.message, erro?.details, erro?.hint].filter(Boolean).join(' ');
+  console.error(contexto, erro);
+  mensagem(`${contexto} Detalhes: ${detalhes || 'erro sem detalhes retornados.'}`);
+}
+
 function configurarSaida() { 
   document.querySelector('[data-action="logout"]')?.addEventListener('click', (e) => { 
     e.preventDefault(); 
@@ -52,6 +60,8 @@ function configurarSaida() {
 function administrador() { 
   return lerSessao()?.isAdmin === true; 
 }
+
+function renderizarPaginacaoUsuarios(total) { let navegacao = document.getElementById('paginacao-usuarios'); if (!navegacao) { navegacao = document.createElement('nav'); navegacao.id = 'paginacao-usuarios'; navegacao.className = 'mt-3'; document.querySelector('[data-records]').closest('section').after(navegacao); } const paginas = Math.ceil(total / REGISTROS_POR_PAGINA); if (paginaAtual > paginas) paginaAtual = Math.max(1, paginas); navegacao.innerHTML = paginas > 1 ? `<ul class="pagination justify-content-end mb-0">${Array.from({ length: paginas }, (_, i) => `<li class="page-item ${paginaAtual === i + 1 ? 'active' : ''}"><button class="page-link" data-pagina-usuario="${i + 1}">${i + 1}</button></li>`).join('')}</ul>` : ''; }
 
 async function carregarUsuarios(pesquisa = '') { 
   let consulta = supabase
@@ -65,7 +75,7 @@ async function carregarUsuarios(pesquisa = '') {
   }
 
   const { data, error } = await consulta; 
-  if (error) return mensagem('Não foi possível carregar os usuários.'); 
+  if (error) return mostrarErroBanco('Não foi possível carregar os usuários.', error); 
 
   document.querySelector('[data-record-count]').textContent = `${data.length} ${data.length === 1 ? 'registro' : 'registros'}`; 
 
@@ -73,8 +83,10 @@ async function carregarUsuarios(pesquisa = '') {
     ? (u) => `<button class="action-button border-0 bg-transparent" data-edit="${u.id}">Editar</button><button class="action-button text-danger border-0 bg-transparent" data-delete="${u.id}">Excluir</button>` 
     : () => '—'; 
 
+  renderizarPaginacaoUsuarios(data.length);
+  const usuariosDaPagina = data.slice((paginaAtual - 1) * REGISTROS_POR_PAGINA, paginaAtual * REGISTROS_POR_PAGINA);
   document.querySelector('[data-records]').innerHTML = data.length 
-    ? data.map((u) => 
+    ? usuariosDaPagina.map((u) => 
         `<tr>` +
           `<td>${u.id}</td>` +
           `<td><strong>${esc(u.usuario)}</strong></td>` +
@@ -147,12 +159,13 @@ if (verificarSessao()) {
   configurarSaida(); 
   carregarUsuarios(); 
 
-  document.querySelector('[data-search]').addEventListener('input', (e) => carregarUsuarios(e.target.value)); 
+  document.querySelector('[data-search]').addEventListener('input', (e) => { paginaAtual = 1; carregarUsuarios(e.target.value); }); 
   document.querySelector('[data-save]').addEventListener('click', cadastrarUsuario); 
 
   document.addEventListener('click', (e) => { 
     if (e.target.dataset.edit) editarUsuario(e.target.dataset.edit); 
     if (e.target.dataset.delete) excluirUsuario(e.target.dataset.delete); 
+    if (e.target.dataset.paginaUsuario) { paginaAtual = Number(e.target.dataset.paginaUsuario); carregarUsuarios(document.querySelector('[data-search]').value); }
   }); 
 
   document.getElementById('usuarioModal').addEventListener('hidden.bs.modal', () => { 

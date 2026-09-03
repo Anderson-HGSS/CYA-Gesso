@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_qPjGkoVq70xT2cqCd0jDVw_RJWWxeJg';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = 'cyaGessoUsuarioLogado';
 let clienteEmEdicao = null;
+let paginaAtual = 1;
+const REGISTROS_POR_PAGINA = 4;
 
 const esc = (valor) => 
   String(valor ?? '').replace(/[&<>"']/g, (caractere) => ({ 
@@ -32,6 +34,12 @@ function mostrarMensagem(texto, tipo = 'danger') {
   alerta.innerHTML = `${texto}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`; 
 }
 
+function mostrarErroBanco(contexto, erro) {
+  const detalhes = [erro?.message, erro?.details, erro?.hint].filter(Boolean).join(' ');
+  console.error(contexto, erro);
+  mostrarMensagem(`${contexto} Detalhes: ${detalhes || 'erro sem detalhes retornados.'}`);
+}
+
 function configurarSaida() { 
   document.querySelector('[data-action="logout"]')?.addEventListener('click', (evento) => { 
     evento.preventDefault(); 
@@ -42,6 +50,22 @@ function configurarSaida() {
 
 function atualizarContagem(total) { 
   document.querySelector('[data-record-count]').textContent = `${total} ${total === 1 ? 'registro' : 'registros'}`; 
+}
+
+function aplicarMascaraCpfCnpj(campo) {
+  const tipoCliente = document.getElementById('cliente-tipo').value;
+  const numeros = campo.value.replace(/\D/g, '').slice(0, tipoCliente === 'J' ? 14 : 11);
+  campo.value = tipoCliente === 'J'
+    ? numeros.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+    : numeros.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+
+function renderizarPaginacaoClientes(total) {
+  let navegacao = document.getElementById('paginacao-clientes');
+  if (!navegacao) { navegacao = document.createElement('nav'); navegacao.id = 'paginacao-clientes'; navegacao.className = 'mt-3'; document.querySelector('[data-records]').closest('section').after(navegacao); }
+  const paginas = Math.ceil(total / REGISTROS_POR_PAGINA);
+  if (paginaAtual > paginas) paginaAtual = Math.max(1, paginas);
+  navegacao.innerHTML = paginas > 1 ? `<ul class="pagination justify-content-end mb-0">${Array.from({ length: paginas }, (_, i) => `<li class="page-item ${paginaAtual === i + 1 ? 'active' : ''}"><button class="page-link" data-pagina-cliente="${i + 1}">${i + 1}</button></li>`).join('')}</ul>` : '';
 }
 
 async function carregarClientes(pesquisa = '') {
@@ -60,13 +84,15 @@ async function carregarClientes(pesquisa = '') {
 
   if (error) { 
     corpo.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Não foi possível realizar a pesquisa.</td></tr>'; 
-    return mostrarMensagem('Não foi possível carregar os clientes.'); 
+    return mostrarErroBanco('Não foi possível carregar os clientes.', error); 
   }
 
   atualizarContagem(data.length);
 
+  renderizarPaginacaoClientes(data.length);
+  const clientesDaPagina = data.slice((paginaAtual - 1) * REGISTROS_POR_PAGINA, paginaAtual * REGISTROS_POR_PAGINA);
   corpo.innerHTML = data.length 
-    ? data.map((cliente) => 
+    ? clientesDaPagina.map((cliente) => 
         `<tr>` +
           `<td>${esc(cliente.clienteid)}</td>` +
           `<td><strong>${esc(cliente.nome_cliente)}</strong></td>` +
@@ -88,6 +114,11 @@ async function cadastrarCliente() {
 
   if (!nome_cliente || !tipo_cliente || !cpf_cnpj_cliente) {
     return mostrarMensagem('Preencha nome, CPF/CNPJ e tipo de cliente.');
+  }
+
+  const tamanhoEsperado = tipo_cliente === 'F' ? 11 : 14;
+  if (cpf_cnpj_cliente.replace(/\D/g, '').length !== tamanhoEsperado) {
+    return mostrarMensagem(tipo_cliente === 'F' ? 'Informe um CPF com 11 dígitos.' : 'Informe um CNPJ com 14 dígitos.');
   }
 
   const dados = { nome_cliente, tipo_cliente, cpf_cnpj_cliente };
@@ -113,7 +144,7 @@ async function editarCliente(id) {
   clienteEmEdicao = data.clienteid; 
   document.getElementById('cliente-nome').value = data.nome_cliente || ''; 
   document.getElementById('cliente-tipo').value = data.tipo_cliente || ''; 
-  document.getElementById('cliente-doc').value = data.cpf_cnpj_cliente || ''; 
+  document.getElementById('cliente-doc').value = data.cpf_cnpj_cliente || ''; aplicarMascaraCpfCnpj(document.getElementById('cliente-doc'));
   document.querySelector('#clienteModal .modal-title').textContent = 'Editar cliente'; 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('clienteModal')).show(); 
 }
@@ -132,12 +163,15 @@ if (verificarSessao()) {
   configurarSaida(); 
   carregarClientes(); 
 
-  document.querySelector('[data-search]').addEventListener('input', (evento) => carregarClientes(evento.target.value)); 
+  document.querySelector('[data-search]').addEventListener('input', (evento) => { paginaAtual = 1; carregarClientes(evento.target.value); }); 
   document.querySelector('[data-save]').addEventListener('click', cadastrarCliente); 
+  document.getElementById('cliente-doc').addEventListener('input', (evento) => aplicarMascaraCpfCnpj(evento.target));
+  document.getElementById('cliente-tipo').addEventListener('change', () => aplicarMascaraCpfCnpj(document.getElementById('cliente-doc')));
 
   document.addEventListener('click', (evento) => { 
     if (evento.target.dataset.edit) editarCliente(evento.target.dataset.edit); 
     if (evento.target.dataset.delete) excluirCliente(evento.target.dataset.delete); 
+    if (evento.target.dataset.paginaCliente) { paginaAtual = Number(evento.target.dataset.paginaCliente); carregarClientes(document.querySelector('[data-search]').value); }
   }); 
 
   document.getElementById('clienteModal').addEventListener('hidden.bs.modal', () => { 
