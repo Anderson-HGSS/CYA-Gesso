@@ -118,7 +118,7 @@ async function excluirCategoria(id) {
   if (produtos.length) {
     const { data: itens, error: erroItens } = await supabase.from('orcamento_item').select('produtoid').in('produtoid', produtos.map((produto) => produto.produtoid)).limit(1);
     if (erroItens) return mostrarMensagem('Não foi possível verificar os orçamentos da categoria.');
-    if (itens.length) return mostrarMensagem('Não é possível excluir esta categoria porque existem produtos desta categoria utilizados em orçamentos.');
+    if (itens.length) return mostrarMensagem('Não é possível excluir esta categoria porque existem produtos com esta categoria');
   }
   if (!window.confirm('Tem certeza que deseja excluir esta categoria?')) return; 
 
