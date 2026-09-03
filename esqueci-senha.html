@@ -21,9 +21,7 @@
                 type="submit">Enviar recuperação</button>
         </form><a class="d-block text-center small mt-4 text-decoration-none" href="index.html">Voltar ao Login</a>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script
-        type="module">import { supabase } from './js/supabase.js'; import { showMessage } from './js/auth.js'; document.getElementById('recovery-form').addEventListener('submit', async e => { e.preventDefault(); const { error } = await supabase.auth.resetPasswordForEmail(document.getElementById('recovery-email').value, { redirectTo: window.location.origin + '/index.html' }); showMessage(error ? error.message : 'E-mail de recuperação enviado. Verifique sua caixa de entrada.', error ? 'danger' : 'success'); });</script>
+    <script type="module" src="js/esqueci-senha.js"></script>
 </body>
 
 </html>
