@@ -7,6 +7,43 @@
     <title>Orçamentos | CYA GESSO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .somente-impressao {
+            display: none;
+        }
+
+        @media print {
+            body>* {
+                display: none !important;
+            }
+
+            #visualizacaoModal {
+                display: block !important;
+                position: static !important;
+                overflow: visible !important;
+            }
+
+            #visualizacaoModal .modal-dialog {
+                max-width: none !important;
+                margin: 0 !important;
+            }
+
+            #visualizacaoModal .modal-content {
+                border: 0 !important;
+                box-shadow: none !important;
+            }
+
+            #visualizacaoModal .modal-header,
+            #visualizacaoModal .modal-footer,
+            #documento-orcamento .somente-administrativo {
+                display: none !important;
+            }
+
+            #documento-orcamento .somente-impressao {
+                display: inline !important;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -118,7 +155,7 @@
                                 <th>Número</th>
                                 <th>Cliente</th>
                                 <th>Data</th>
-                                <th>Validade</th>
+                                <th>Obra</th>
                                 <th>Valor total</th>
                                 <th class="text-end">Ações</th>
                             </tr>
@@ -127,7 +164,7 @@
                     </table>
                 </div>
             </section>
-            
+
             <a class="btn btn-danger" href="../menu.html">Cancelar</a>
         </div>
     </main>
@@ -142,12 +179,20 @@
                     <div class="modal-body">
                         <div class="row g-3 mb-4">
                             <div class="col-lg-6"><label class="form-label" for="orc-cliente">Cliente *</label><input
-                                    class="form-control" id="orc-cliente" list="orc-clientes" placeholder="Digite o nome do cliente..."><datalist id="orc-clientes"></datalist><input type="hidden" id="orc-cliente-id"></div>
-                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-validade">Validade
-                                    *</label><input class="form-control" id="orc-validade" type="date"></div>
-                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-desconto">Desconto
-                                    (%)</label><input class="form-control" id="orc-desconto" type="number" min="0"
-                                    max="100" step="0.01" value="0"></div>
+                                    class="form-control" id="orc-cliente" list="orc-clientes"
+                                    placeholder="Digite o nome do cliente..."><datalist
+                                    id="orc-clientes"></datalist><input type="hidden" id="orc-cliente-id"></div>
+                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-ambiente">Ambiente do
+                                    serviço
+                                    *</label><input class="form-control" id="orc-ambiente" type="text" maxlength="100"
+                                    placeholder="Ex.: Sala, quarto, cozinha..."></div>
+                            <div class="col-sm-6 col-lg-3"><label class="form-label" for="orc-obra">Obra
+                                    *</label><input class="form-control" id="orc-obra" type="text"
+                                    maxlength="150" placeholder="Ex.: Residência João Silva"></div>
+                            <div class="col-sm-6 col-lg-3"><label class="form-label"
+                                    for="orc-observacoes">Observações</label><input class="form-control"
+                                    id="orc-observacoes" type="text" maxlength="255"
+                                    placeholder="Ex.: Serviço inclui acabamento no teto..."></div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h3 class="section-heading">Itens do orçamento</h3><button
@@ -159,7 +204,7 @@
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
-                                        <th>Quantidade</th>
+                                        <th>Quantidade mt</th>
                                         <th>Preço unitário</th>
                                         <th>Total</th>
                                         <th></th>
@@ -168,16 +213,26 @@
                                 <tbody id="budget-items"></tbody>
                             </table>
                         </div>
-                        <div class="quote-total d-flex justify-content-between mt-3"><span class="d-block small">Subtotal: <strong
-                                    id="orc-subtotal">R$ 0,00</strong></span><span class="d-block small">Desconto:
-                                <strong id="orc-discount-rate">0,00%</strong></span><span class="d-block small">Valor do
-                                desconto: <strong id="orc-discount-value">R$ 0,00</strong></span><span
-                                class="d-block small">Total: <strong id="orc-total">R$ 0,00</strong></span></div>
+                        <div class="quote-total d-flex justify-content-end mt-3"><span class="d-block small">Total:
+                                <strong id="orc-total">R$ 0,00</strong></span></div>
                     </div>
                     <div class="modal-footer"><button class="btn btn-light" type="button"
                             data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="button"
                             data-save>Salvar orçamento</button></div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="visualizacaoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5">Visualizar orçamento</h2><button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="documento-orcamento"></div>
+                <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal">Fechar</button><button
+                        class="btn btn-primary" type="button" data-imprimir-orcamento>Imprimir orçamento</button></div>
             </div>
         </div>
     </div>

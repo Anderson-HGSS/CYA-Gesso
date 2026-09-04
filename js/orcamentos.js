@@ -55,7 +55,6 @@ function configurarSaida() {
 }
 
 function dataAtual() { return new Date().toISOString().slice(0, 10); }
-function prepararNovoOrcamento() { document.getElementById('orc-validade').min = dataAtual(); }
 function renderizarPaginacaoOrcamentos(total) { let navegacao = document.getElementById('paginacao-orcamentos'); if (!navegacao) { navegacao = document.createElement('nav'); navegacao.id = 'paginacao-orcamentos'; navegacao.className = 'mt-3'; document.querySelector('[data-records]').closest('section').after(navegacao); } const paginas = Math.ceil(total / REGISTROS_POR_PAGINA); if (paginaAtual > paginas) paginaAtual = Math.max(1, paginas); navegacao.innerHTML = paginas > 1 ? `<ul class="pagination justify-content-end mb-0">${Array.from({ length: paginas }, (_, i) => `<li class="page-item ${paginaAtual === i + 1 ? 'active' : ''}"><button class="page-link" data-pagina-orcamento="${i + 1}">${i + 1}</button></li>`).join('')}</ul>` : ''; }
 
 async function carregarOpcoes() { 
@@ -97,9 +96,10 @@ async function carregarOrcamentos(pesquisa = '') {
           `<td>${o.orcamentoid}</td>` +
           `<td>${esc(nomes.get(o.clienteid) || o.clienteid)}</td>` +
           `<td>${dataFormatada(o.dt_orcamento)}</td>` +
-          `<td>${dataFormatada(o.dt_validade_orcamento)}</td>` +
+          `<td>${esc(o.obra || '—')}</td>` +
           `<td>${moeda(o.vl_total_orcamento)}</td>` +
           `<td class="text-end">` +
+            `<button class="action-button border-0 bg-transparent" data-view="${o.orcamentoid}">Visualizar</button>` +
             `<button class="action-button text-danger border-0 bg-transparent" data-delete="${o.orcamentoid}">Excluir</button>` +
           `</td>` +
         `</tr>`
@@ -146,26 +146,23 @@ function atualizarItem(linha) {
 }
 
 function resumo() { 
-  const subtotal = [...document.querySelectorAll('#budget-items tr')].reduce((soma, linha) => soma + Number(linha.dataset.total || 0), 0); 
-  const percentual = Number(document.getElementById('orc-desconto').value || 0); 
-  const desconto = subtotal * Math.min(100, Math.max(0, percentual)) / 100; 
+  const total = [...document.querySelectorAll('#budget-items tr')].reduce((soma, linha) => soma + Number(linha.dataset.total || 0), 0); 
 
-  return { subtotal, percentual, desconto, total: subtotal - desconto }; 
+  return { total }; 
 }
 
 function atualizarTotal() { 
-  const { subtotal, percentual, desconto, total } = resumo(); 
+  const { total } = resumo(); 
 
-  document.getElementById('orc-subtotal').textContent = moeda(subtotal); 
-  document.getElementById('orc-discount-rate').textContent = `${percentual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}%`; 
-  document.getElementById('orc-discount-value').textContent = moeda(desconto); 
   document.getElementById('orc-total').textContent = moeda(total); 
 }
 
 async function cadastrarOrcamento() { 
   const clienteid = Number(document.getElementById('orc-cliente-id').value); 
   const dt_orcamento = dataAtual(); 
-  const dt_validade_orcamento = document.getElementById('orc-validade').value; 
+  const obra = document.getElementById('orc-obra').value.trim(); 
+  const ambiente_servico = document.getElementById('orc-ambiente').value.trim(); 
+  const observacoes = document.getElementById('orc-observacoes').value.trim(); 
 
   const itens = [...document.querySelectorAll('#budget-items tr')].map((linha) => { 
     const opcao = linha.querySelector('.budget-product').selectedOptions[0]; 
@@ -178,15 +175,14 @@ async function cadastrarOrcamento() {
     }; 
   }); 
 
-  if (!clienteid || !dt_validade_orcamento || !itens.length || itens.some((i) => !i.produtoid || i.qt_produto <= 0)) {
-    return mensagem('Informe cliente, datas e ao menos um produto com quantidade válida.'); 
+  if (!clienteid || !obra || !ambiente_servico || !itens.length || itens.some((i) => !i.produtoid || i.qt_produto <= 0)) {
+    return mensagem('Informe cliente, nome da obra, ambiente e ao menos um produto com quantidade válida.'); 
   }
-  if (dt_validade_orcamento < dataAtual()) return mensagem('A data de validade não pode ser anterior à data atual.');
 
   const { total } = resumo(); 
   const { data: orcamento, error } = await supabase
     .from('orcamento')
-    .insert({ clienteid, dt_orcamento, dt_validade_orcamento, vl_total_orcamento: total })
+    .insert({ clienteid, dt_orcamento, obra, ambiente_servico, observacoes, vl_total_orcamento: total })
     .select('orcamentoid')
     .single(); 
 
@@ -205,9 +201,9 @@ async function cadastrarOrcamento() {
     return mensagem(`O orçamento foi criado, mas não foi possível salvar os itens. Motivo informado pelo banco: ${detalhes || 'erro sem detalhes retornados.'}`);
   }
 
-  bootstrap.Modal.getInstance(document.getElementById('orcamentoModal'))?.hide(); 
-  mensagem('Orçamento cadastrado com sucesso.', 'success'); 
   carregarOrcamentos(document.querySelector('[data-search]').value); 
+  const cadastrarOutro = window.confirm('Orçamento cadastrado com sucesso. Deseja cadastrar outro orçamento utilizando estes dados como base?');
+  if (!cadastrarOutro) bootstrap.Modal.getInstance(document.getElementById('orcamentoModal'))?.hide();
 }
 
 async function excluirOrcamento(id) { 
@@ -223,6 +219,28 @@ async function excluirOrcamento(id) {
   carregarOrcamentos(document.querySelector('[data-search]').value); 
 }
 
+async function visualizarOrcamento(id) {
+  const [orcamento, itens] = await Promise.all([
+    supabase.from('orcamento').select('*').eq('orcamentoid', id).single(),
+    supabase.from('orcamento_item').select('produtodesc, qt_produto, vl_unitario, vl_total').eq('orcamentoid', id)
+  ]);
+  if (orcamento.error || itens.error) return mostrarErroBanco('Não foi possível carregar o orçamento.', orcamento.error || itens.error);
+
+  const { data: cliente, error: erroCliente } = await supabase.from('cliente').select('nome_cliente, tipo_cliente').eq('clienteid', orcamento.data.clienteid).single();
+  if (erroCliente) return mostrarErroBanco('Não foi possível carregar o cliente do orçamento.', erroCliente);
+
+  document.getElementById('documento-orcamento').innerHTML =
+    `<div style="font-family:Arial,sans-serif;color:#111;padding:12px">` +
+    `<h1 style="text-align:center;font-size:24px;margin:0 0 24px">CYA GESSO</h1>` +
+    `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #777;padding-bottom:12px;margin-bottom:20px"><div>CNPJ: 26.865.625/0001-00<br>Telefone: (44) 9.9837-1440</div><div>Data: ${dataFormatada(orcamento.data.dt_orcamento)}</div></div>` +
+    `<p><span class="somente-administrativo"><strong>Número do orçamento:</strong> ${esc(orcamento.data.orcamentoid)}<br></span><strong>Cliente:</strong> ${esc(cliente.nome_cliente)}<br><span class="somente-administrativo"><strong>Tipo do cliente:</strong> ${esc(cliente.tipo_cliente)}<br><strong>Obra:</strong> ${esc(orcamento.data.obra || '—')}<br><strong>Ambiente do serviço:</strong> ${esc(orcamento.data.ambiente_servico || '—')}<br></span><span class="somente-impressao"><strong>Obra:</strong> ${esc(orcamento.data.obra || '—')}<br></span></p>` +
+    `<p style="text-align:left;font-weight:bold;margin:28px 0">CONFORME SOLICITAÇÃO, ESTAMOS ENVIANDO NOSSA PROPOSTA COMERCIAL<br>PARA REALIZAÇÃO DE NOSSOS SERVIÇOS</p>` +
+    `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;border-bottom:1px solid #777;padding:6px">Produto</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Qtd.</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Unitário</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Total</th></tr></thead><tbody>${itens.data.map((item) => `<tr><td style="padding:6px">${esc(item.produtodesc)}</td><td style="text-align:right;padding:6px">${esc(item.qt_produto)}</td><td style="text-align:right;padding:6px">${moeda(item.vl_unitario)}</td><td style="text-align:right;padding:6px">${moeda(item.vl_total)}</td></tr>`).join('')}</tbody></table>` +
+    `<div style="border-top:1px solid #777;margin-top:20px;padding-top:14px"><strong>Observações:</strong><p>${esc(orcamento.data.observacoes || 'Nenhuma observação informada.')}</p></div>` +
+    `<div style="border-top:1px solid #777;margin-top:20px;padding-top:14px;text-align:right"><strong style="font-size:18px">TOTAL<br>${moeda(orcamento.data.vl_total_orcamento)}</strong></div></div>`;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('visualizacaoModal')).show();
+}
+
 if (verificarSessao()) { 
   configurarSaida(); 
   carregarOpcoes().then(() => { 
@@ -233,19 +251,16 @@ if (verificarSessao()) {
   document.querySelector('[data-search]').addEventListener('input', (e) => { paginaAtual = 1; carregarOrcamentos(e.target.value); }); 
   document.querySelector('[data-add-item]').addEventListener('click', adicionarItem); 
   document.querySelector('[data-save]').addEventListener('click', cadastrarOrcamento); 
-  document.getElementById('orc-desconto').addEventListener('input', atualizarTotal); 
-
   document.addEventListener('click', (e) => { 
     if (e.target.dataset.delete) excluirOrcamento(e.target.dataset.delete); 
+    if (e.target.dataset.view) visualizarOrcamento(e.target.dataset.view);
     if (e.target.dataset.paginaOrcamento) { paginaAtual = Number(e.target.dataset.paginaOrcamento); carregarOrcamentos(document.querySelector('[data-search]').value); }
   }); 
 
   document.getElementById('orc-cliente').addEventListener('input', (e) => { const cliente = clientesDoOrcamento.find((c) => c.nome_cliente === e.target.value); document.getElementById('orc-cliente-id').value = cliente ? cliente.clienteid : ''; });
-  document.getElementById('orcamentoModal').addEventListener('show.bs.modal', prepararNovoOrcamento);
-
+  document.querySelector('[data-imprimir-orcamento]').addEventListener('click', () => window.print());
   document.getElementById('orcamentoModal').addEventListener('hidden.bs.modal', () => { 
     document.querySelector('#orcamentoModal form').reset(); 
-    prepararNovoOrcamento();
     document.getElementById('budget-items').innerHTML = ''; 
     adicionarItem(); 
   }); 

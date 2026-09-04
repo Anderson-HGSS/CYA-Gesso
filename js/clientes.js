@@ -52,14 +52,6 @@ function atualizarContagem(total) {
   document.querySelector('[data-record-count]').textContent = `${total} ${total === 1 ? 'registro' : 'registros'}`; 
 }
 
-function aplicarMascaraCpfCnpj(campo) {
-  const tipoCliente = document.getElementById('cliente-tipo').value;
-  const numeros = campo.value.replace(/\D/g, '').slice(0, tipoCliente === 'J' ? 14 : 11);
-  campo.value = tipoCliente === 'J'
-    ? numeros.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d{1,2})$/, '$1-$2')
-    : numeros.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-}
-
 function renderizarPaginacaoClientes(total) {
   let navegacao = document.getElementById('paginacao-clientes');
   if (!navegacao) { navegacao = document.createElement('nav'); navegacao.id = 'paginacao-clientes'; navegacao.className = 'mt-3'; document.querySelector('[data-records]').closest('section').after(navegacao); }
@@ -110,18 +102,10 @@ async function carregarClientes(pesquisa = '') {
 async function cadastrarCliente() {
   const nome_cliente = document.getElementById('cliente-nome').value.trim(); 
   const tipo_cliente = document.getElementById('cliente-tipo').value; 
-  const cpf_cnpj_cliente = document.getElementById('cliente-doc').value.trim();
 
-  if (!nome_cliente || !tipo_cliente || !cpf_cnpj_cliente) {
-    return mostrarMensagem('Preencha nome, CPF/CNPJ e tipo de cliente.');
-  }
+  if (!nome_cliente || !tipo_cliente) return mostrarMensagem('Preencha nome e tipo de cliente.');
 
-  const tamanhoEsperado = tipo_cliente === 'F' ? 11 : 14;
-  if (cpf_cnpj_cliente.replace(/\D/g, '').length !== tamanhoEsperado) {
-    return mostrarMensagem(tipo_cliente === 'F' ? 'Informe um CPF com 11 dígitos.' : 'Informe um CNPJ com 14 dígitos.');
-  }
-
-  const dados = { nome_cliente, tipo_cliente, cpf_cnpj_cliente };
+  const dados = { nome_cliente, tipo_cliente };
   const consulta = clienteEmEdicao 
     ? supabase.from('cliente').update(dados).eq('clienteid', clienteEmEdicao) 
     : supabase.from('cliente').insert(dados);
@@ -144,7 +128,6 @@ async function editarCliente(id) {
   clienteEmEdicao = data.clienteid; 
   document.getElementById('cliente-nome').value = data.nome_cliente || ''; 
   document.getElementById('cliente-tipo').value = data.tipo_cliente || ''; 
-  document.getElementById('cliente-doc').value = data.cpf_cnpj_cliente || ''; aplicarMascaraCpfCnpj(document.getElementById('cliente-doc'));
   document.querySelector('#clienteModal .modal-title').textContent = 'Editar cliente'; 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('clienteModal')).show(); 
 }
@@ -165,8 +148,6 @@ if (verificarSessao()) {
 
   document.querySelector('[data-search]').addEventListener('input', (evento) => { paginaAtual = 1; carregarClientes(evento.target.value); }); 
   document.querySelector('[data-save]').addEventListener('click', cadastrarCliente); 
-  document.getElementById('cliente-doc').addEventListener('input', (evento) => aplicarMascaraCpfCnpj(evento.target));
-  document.getElementById('cliente-tipo').addEventListener('change', () => aplicarMascaraCpfCnpj(document.getElementById('cliente-doc')));
 
   document.addEventListener('click', (evento) => { 
     if (evento.target.dataset.edit) editarCliente(evento.target.dataset.edit); 
