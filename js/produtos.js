@@ -114,10 +114,18 @@ async function carregarProdutos(pesquisa = '') {
         : '<tr><td colspan="8" class="text-center text-secondary py-4">Nenhum registro encontrado.</td></tr>';
 }
 
+function atualizarCampoValorVariavel() {
+    const variavel = document.getElementById('produto-valor-variavel').checked;
+    const campo = document.getElementById('produto-venda');
+    campo.disabled = variavel;
+    if (variavel) campo.value = moeda(0);
+}
+
 async function cadastrarProduto() {
     const ds_produto = document.getElementById('produto-nome').value.trim();
     const categoriaprodutoid = Number(document.getElementById('produto-categoria').value);
-    const vl_venda_produto = numero(document.getElementById('produto-venda').value);
+    const valor_variavel = document.getElementById('produto-valor-variavel').checked;
+    const vl_venda_produto = valor_variavel ? 0 : numero(document.getElementById('produto-venda').value);
     const status_produto = document.getElementById('produto-status').value;
 
     if (!ds_produto || !categoriaprodutoid || !Number.isFinite(vl_venda_produto)) {
@@ -129,6 +137,7 @@ async function cadastrarProduto() {
         categoriaprodutoid,
         obs_produto: document.getElementById('produto-descricao').value.trim() || null,
         vl_venda_produto,
+        valor_variavel,
         status_produto
     };
 
@@ -153,6 +162,8 @@ async function editarProduto(id) {
     document.getElementById('produto-categoria').value = data.categoriaprodutoid || '';
     document.getElementById('produto-descricao').value = data.obs_produto || '';
     document.getElementById('produto-venda').value = moeda(data.vl_venda_produto);
+    document.getElementById('produto-valor-variavel').checked = data.valor_variavel === true;
+    atualizarCampoValorVariavel();
     document.getElementById('produto-status').value = data.status_produto || 'Ativo';
 
     document.querySelector('#produtoModal .modal-title').textContent = 'Editar produto';
@@ -176,6 +187,7 @@ if (verificarSessao()) {
     document.querySelector('[data-search]').addEventListener('input', (e) => { paginaAtual = 1; carregarProdutos(e.target.value); });
     document.querySelector('[data-save]').addEventListener('click', cadastrarProduto);
     document.getElementById('produto-venda').addEventListener('input', (e) => aplicarMascaraMoeda(e.target));
+    document.getElementById('produto-valor-variavel').addEventListener('change', atualizarCampoValorVariavel);
 
     document.addEventListener('click', (e) => {
         if (e.target.dataset.edit) editarProduto(e.target.dataset.edit);
@@ -186,6 +198,7 @@ if (verificarSessao()) {
     document.getElementById('produtoModal').addEventListener('hidden.bs.modal', () => {
         produtoEmEdicao = null;
         document.querySelector('#produtoModal form').reset();
+        atualizarCampoValorVariavel();
         document.getElementById('produto-status').value = 'Ativo';
         document.querySelector('#produtoModal .modal-title').textContent = 'Novo produto';
     });

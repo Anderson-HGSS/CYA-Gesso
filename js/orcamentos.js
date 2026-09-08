@@ -4,6 +4,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = 'cyaGessoUsuarioLogado';
 let produtosDoOrcamento = [];
 let clientesDoOrcamento = [];
+let orcamentoEmEdicao = null;
 let paginaAtual = 1;
 const REGISTROS_POR_PAGINA = 4;
 
@@ -17,6 +18,16 @@ const esc = (v) =>
   })[c]);
 
 const moeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const numero = (v) => {
+  const texto = String(v).replace(/[^0-9,.-]/g, '');
+  return Number(texto.includes(',') ? texto.replace(/\./g, '').replace(',', '.') : texto);
+};
+
+function aplicarMascaraMoeda(campo) {
+  const centavos = campo.value.replace(/\D/g, '');
+  campo.value = moeda(Number(centavos || 0) / 100);
+}
 
 const dataFormatada = (v) => 
   v ? new Date(`${String(v).slice(0, 10)}T00:00:00`).toLocaleDateString('pt-BR') : '—';
@@ -60,7 +71,7 @@ function renderizarPaginacaoOrcamentos(total) { let navegacao = document.getElem
 async function carregarOpcoes() { 
   const [clientes, produtos] = await Promise.all([
     supabase.from('cliente').select('clienteid, nome_cliente').order('nome_cliente'), 
-    supabase.from('produto').select('produtoid, ds_produto, vl_venda_produto').order('ds_produto')
+    supabase.from('produto').select('produtoid, ds_produto, vl_venda_produto, valor_variavel').order('ds_produto')
   ]); 
 
   if (clientes.error || produtos.error) return mostrarErroBanco('Não foi possível carregar clientes e produtos.', clientes.error || produtos.error); 
@@ -100,6 +111,7 @@ async function carregarOrcamentos(pesquisa = '') {
           `<td>${moeda(o.vl_total_orcamento)}</td>` +
           `<td class="text-end">` +
             `<button class="action-button border-0 bg-transparent" data-view="${o.orcamentoid}">Visualizar</button>` +
+            `<button class="action-button border-0 bg-transparent" data-edit="${o.orcamentoid}">Editar</button>` +
             `<button class="action-button text-danger border-0 bg-transparent" data-delete="${o.orcamentoid}">Excluir</button>` +
           `</td>` +
         `</tr>`
@@ -109,21 +121,42 @@ async function carregarOrcamentos(pesquisa = '') {
 
 function opcoesProdutos() { 
   return '<option value="">Selecione o produto</option>' + 
-    produtosDoOrcamento.map((p) => `<option value="${p.produtoid}" data-price="${p.vl_venda_produto}">${esc(p.ds_produto)}</option>`).join(''); 
+    produtosDoOrcamento.map((p) => `<option value="${p.produtoid}" data-price="${p.vl_venda_produto}" data-variable="${p.valor_variavel === true}">${esc(p.ds_produto)}</option>`).join('');
 }
 
-function adicionarItem() { 
+function adicionarItem(item = null) {
   const linha = document.createElement('tr'); 
   linha.innerHTML = 
     `<td><select class="form-select form-select-sm budget-product">${opcoesProdutos()}</select></td>` +
     `<td><input class="form-control form-control-sm budget-quantity" type="number" min="1" value="1"></td>` +
-    `<td class="budget-price">R$ 0,00</td>` +
+    `<td><span class="budget-price">R$ 0,00</span><input class="form-control form-control-sm budget-manual-price" type="text" inputmode="decimal" aria-label="Valor unitário" value="R$ 0,00" hidden></td>` +
     `<td class="budget-line-total">R$ 0,00</td>` +
     `<td><button class="btn btn-sm text-danger budget-remove" type="button">×</button></td>`; 
 
   document.getElementById('budget-items').append(linha); 
 
-  linha.querySelector('.budget-product').addEventListener('change', () => atualizarItem(linha)); 
+  if (item) {
+    const selecao = linha.querySelector('.budget-product');
+    let opcao = [...selecao.options].find((o) => o.value === String(item.produtoid));
+    if (!opcao) {
+      opcao = document.createElement('option');
+      opcao.value = item.produtoid;
+      opcao.dataset.price = item.vl_unitario;
+      selecao.append(opcao);
+    }
+    opcao.textContent = item.produtodesc ?? '';
+    linha.dataset.unitario = item.vl_unitario;
+    linha.querySelector('.budget-manual-price').value = moeda(item.vl_unitario);
+    selecao.value = String(item.produtoid);
+    linha.querySelector('.budget-quantity').value = item.qt_produto;
+    atualizarItem(linha);
+  }
+
+  linha.querySelector('.budget-product').addEventListener('change', () => atualizarItem(linha, true));
+  linha.querySelector('.budget-manual-price').addEventListener('input', (e) => {
+    aplicarMascaraMoeda(e.target);
+    atualizarItem(linha);
+  });
   linha.querySelector('.budget-quantity').addEventListener('input', () => atualizarItem(linha)); 
   linha.querySelector('.budget-remove').addEventListener('click', () => { 
     linha.remove(); 
@@ -133,9 +166,19 @@ function adicionarItem() {
   atualizarTotal(); 
 }
 
-function atualizarItem(linha) { 
+function atualizarItem(linha, redefinirPreco = false) {
   const opcao = linha.querySelector('.budget-product').selectedOptions[0]; 
-  const unitario = Number(opcao?.dataset.price || 0); 
+  const variavel = opcao?.dataset.variable === 'true';
+  const campo = linha.querySelector('.budget-manual-price');
+  campo.hidden = !variavel;
+  campo.disabled = !variavel;
+  linha.querySelector('.budget-price').hidden = variavel;
+  if (redefinirPreco) {
+    linha.dataset.unitario = variavel ? 0 : Number(opcao?.dataset.price || 0);
+    campo.value = moeda(linha.dataset.unitario);
+  }
+  const unitario = variavel ? numero(campo.value) : Number(linha.dataset.unitario ?? opcao?.dataset.price ?? 0);
+  linha.dataset.unitario = unitario;
   const quantidade = Number(linha.querySelector('.budget-quantity').value || 0); 
 
   linha.dataset.total = unitario * quantidade; 
@@ -170,7 +213,7 @@ async function cadastrarOrcamento() {
       produtoid: Number(opcao?.value), 
       produtodesc: opcao?.textContent, 
       qt_produto: Number(linha.querySelector('.budget-quantity').value), 
-      vl_unitario: Number(opcao?.dataset.price), 
+      vl_unitario: Number(linha.dataset.unitario),
       vl_total: Number(linha.dataset.total) 
     }; 
   }); 
@@ -179,7 +222,49 @@ async function cadastrarOrcamento() {
     return mensagem('Informe cliente, nome da obra, ambiente e ao menos um produto com quantidade válida.'); 
   }
 
+  const linhas = [...document.querySelectorAll('#budget-items tr')];
+  const variavelSemValor = itens.find((item, indice) =>
+    linhas[indice].querySelector('.budget-product').selectedOptions[0]?.dataset.variable === 'true' &&
+    (!Number.isFinite(item.vl_unitario) || item.vl_unitario <= 0)
+  );
+  if (variavelSemValor) return mensagem(`Informe o valor do produto "${esc(variavelSemValor.produtodesc)}".`);
+
   const { total } = resumo(); 
+  if (orcamentoEmEdicao !== null) {
+    if (!Number.isFinite(total) || itens.some((i) =>
+      !Number.isFinite(i.produtoid) || !Number.isFinite(i.qt_produto) ||
+      !Number.isFinite(i.vl_unitario) || i.vl_unitario < 0 || !Number.isFinite(i.vl_total)
+    )) return mensagem('Informe produtos, quantidades e valores válidos.');
+
+    const id = orcamentoEmEdicao;
+    const botaoSalvar = document.querySelector('[data-save]');
+    if (botaoSalvar.disabled) return;
+    botaoSalvar.disabled = true;
+    try {
+      const { error } = await supabase.from('orcamento')
+        .update({ clienteid, obra, ambiente_servico, observacoes, vl_total_orcamento: total })
+        .eq('orcamentoid', id);
+      if (error) return mostrarErroBanco('Não foi possível atualizar o orçamento.', error);
+
+      const { error: erroExclusao } = await supabase.from('orcamento_item').delete().eq('orcamentoid', id);
+      if (erroExclusao) return mostrarErroBanco('Os dados do orçamento foram atualizados, mas não foi possível substituir os itens.', erroExclusao);
+
+      const { error: erroItens } = await supabase.from('orcamento_item')
+        .insert(itens.map((i) => ({ ...i, orcamentoid: id })));
+      if (erroItens) return mostrarErroBanco('Os itens anteriores foram removidos, mas não foi possível salvar os novos. Mantenha o formulário aberto e tente salvar novamente.', erroItens);
+
+      orcamentoEmEdicao = null;
+      mensagem('Orçamento atualizado com sucesso.', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('orcamentoModal'))?.hide();
+      carregarOrcamentos(document.querySelector('[data-search]').value);
+    } catch (erro) {
+      mostrarErroBanco('Não foi possível concluir a edição do orçamento. Confira os dados antes de tentar novamente.', erro);
+    } finally {
+      botaoSalvar.disabled = false;
+    }
+    return;
+  }
+
   const { data: orcamento, error } = await supabase
     .from('orcamento')
     .insert({ clienteid, dt_orcamento, obra, ambiente_servico, observacoes, vl_total_orcamento: total })
@@ -204,6 +289,29 @@ async function cadastrarOrcamento() {
   carregarOrcamentos(document.querySelector('[data-search]').value); 
   const cadastrarOutro = window.confirm('Orçamento cadastrado com sucesso. Deseja cadastrar outro orçamento utilizando estes dados como base?');
   if (!cadastrarOutro) bootstrap.Modal.getInstance(document.getElementById('orcamentoModal'))?.hide();
+}
+
+async function editarOrcamento(id) {
+  const [orcamento, itens] = await Promise.all([
+    supabase.from('orcamento').select('orcamentoid, clienteid, obra, ambiente_servico, observacoes').eq('orcamentoid', id).single(),
+    supabase.from('orcamento_item').select('produtoid, produtodesc, qt_produto, vl_unitario, vl_total').eq('orcamentoid', id)
+  ]);
+  if (orcamento.error || itens.error) return mostrarErroBanco('Não foi possível carregar o orçamento para edição.', orcamento.error || itens.error);
+
+  const { data: cliente, error } = await supabase.from('cliente').select('nome_cliente').eq('clienteid', orcamento.data.clienteid).single();
+  if (error) return mostrarErroBanco('Não foi possível carregar o cliente do orçamento.', error);
+
+  orcamentoEmEdicao = orcamento.data.orcamentoid;
+  document.getElementById('orc-cliente').value = cliente.nome_cliente ?? '';
+  document.getElementById('orc-cliente-id').value = orcamento.data.clienteid;
+  document.getElementById('orc-obra').value = orcamento.data.obra ?? '';
+  document.getElementById('orc-ambiente').value = orcamento.data.ambiente_servico ?? '';
+  document.getElementById('orc-observacoes').value = orcamento.data.observacoes ?? '';
+  document.getElementById('budget-items').innerHTML = '';
+  itens.data.forEach((item) => adicionarItem(item));
+  atualizarTotal();
+  document.querySelector('#orcamentoModal .modal-title').textContent = 'Editar orçamento';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('orcamentoModal')).show();
 }
 
 async function excluirOrcamento(id) { 
@@ -235,7 +343,7 @@ async function visualizarOrcamento(id) {
     `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #777;padding-bottom:12px;margin-bottom:20px"><div>CNPJ: 26.865.625/0001-00<br>Telefone: (44) 9.9837-1440</div><div>Data: ${dataFormatada(orcamento.data.dt_orcamento)}</div></div>` +
     `<p><span class="somente-administrativo"><strong>Número do orçamento:</strong> ${esc(orcamento.data.orcamentoid)}<br></span><strong>Cliente:</strong> ${esc(cliente.nome_cliente)}<br><span class="somente-administrativo"><strong>Tipo do cliente:</strong> ${esc(cliente.tipo_cliente)}<br><strong>Obra:</strong> ${esc(orcamento.data.obra || '—')}<br><strong>Ambiente do serviço:</strong> ${esc(orcamento.data.ambiente_servico || '—')}<br></span><span class="somente-impressao"><strong>Obra:</strong> ${esc(orcamento.data.obra || '—')}<br></span></p>` +
     `<p style="text-align:left;font-weight:bold;margin:28px 0">CONFORME SOLICITAÇÃO, ESTAMOS ENVIANDO NOSSA PROPOSTA COMERCIAL<br>PARA REALIZAÇÃO DE NOSSOS SERVIÇOS</p>` +
-    `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;border-bottom:1px solid #777;padding:6px">Produto</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Qtd.</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Unitário</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Total</th></tr></thead><tbody>${itens.data.map((item) => `<tr><td style="padding:6px">${esc(item.produtodesc)}</td><td style="text-align:right;padding:6px">${esc(item.qt_produto)}</td><td style="text-align:right;padding:6px">${moeda(item.vl_unitario)}</td><td style="text-align:right;padding:6px">${moeda(item.vl_total)}</td></tr>`).join('')}</tbody></table>` +
+    `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;border-bottom:1px solid #777;padding:6px">Produto</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Metros²</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Unitário</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Total</th></tr></thead><tbody>${itens.data.map((item) => `<tr><td style="padding:6px">${esc(item.produtodesc)}</td><td style="text-align:right;padding:6px">${esc(item.qt_produto)}</td><td style="text-align:right;padding:6px">${moeda(item.vl_unitario)}</td><td style="text-align:right;padding:6px">${moeda(item.vl_total)}</td></tr>`).join('')}</tbody></table>` +
     `<div style="border-top:1px solid #777;margin-top:20px;padding-top:14px"><strong>Observações:</strong><p>${esc(orcamento.data.observacoes || 'Nenhuma observação informada.')}</p></div>` +
     `<div style="border-top:1px solid #777;margin-top:20px;padding-top:14px;text-align:right"><strong style="font-size:18px">TOTAL<br>${moeda(orcamento.data.vl_total_orcamento)}</strong></div></div>`;
   bootstrap.Modal.getOrCreateInstance(document.getElementById('visualizacaoModal')).show();
@@ -249,17 +357,20 @@ if (verificarSessao()) {
   }); 
 
   document.querySelector('[data-search]').addEventListener('input', (e) => { paginaAtual = 1; carregarOrcamentos(e.target.value); }); 
-  document.querySelector('[data-add-item]').addEventListener('click', adicionarItem); 
+  document.querySelector('[data-add-item]').addEventListener('click', () => adicionarItem());
   document.querySelector('[data-save]').addEventListener('click', cadastrarOrcamento); 
   document.addEventListener('click', (e) => { 
     if (e.target.dataset.delete) excluirOrcamento(e.target.dataset.delete); 
     if (e.target.dataset.view) visualizarOrcamento(e.target.dataset.view);
+    if (e.target.dataset.edit) editarOrcamento(e.target.dataset.edit);
     if (e.target.dataset.paginaOrcamento) { paginaAtual = Number(e.target.dataset.paginaOrcamento); carregarOrcamentos(document.querySelector('[data-search]').value); }
   }); 
 
   document.getElementById('orc-cliente').addEventListener('input', (e) => { const cliente = clientesDoOrcamento.find((c) => c.nome_cliente === e.target.value); document.getElementById('orc-cliente-id').value = cliente ? cliente.clienteid : ''; });
   document.querySelector('[data-imprimir-orcamento]').addEventListener('click', () => window.print());
   document.getElementById('orcamentoModal').addEventListener('hidden.bs.modal', () => { 
+    orcamentoEmEdicao = null;
+    document.querySelector('#orcamentoModal .modal-title').textContent = 'Novo orçamento';
     document.querySelector('#orcamentoModal form').reset(); 
     document.getElementById('budget-items').innerHTML = ''; 
     adicionarItem(); 
