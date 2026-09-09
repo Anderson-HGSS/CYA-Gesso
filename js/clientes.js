@@ -23,15 +23,27 @@ function verificarSessao() {
   return true; 
 }
 
-function mostrarMensagem(texto, tipo = 'danger') { 
-  let alerta = document.getElementById('app-alert'); 
-  if (!alerta) { 
-    alerta = document.createElement('div'); 
-    alerta.id = 'app-alert'; 
-    document.body.append(alerta); 
-  } 
-  alerta.className = `alert alert-${tipo} alert-dismissible fade show app-alert`; 
-  alerta.innerHTML = `${texto}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`; 
+let timeoutMensagem;
+
+function mostrarMensagem(texto, tipo = 'danger') {
+    let alerta = document.getElementById('app-alert');
+
+    if (!alerta) {
+        alerta = document.createElement('div');
+        alerta.id = 'app-alert';
+        document.body.append(alerta);
+    }
+
+    alerta.className = `alert alert-${tipo} alert-dismissible fade show app-alert`;
+    alerta.innerHTML = `${texto}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+
+    // Cancela o temporizador da mensagem anterior, caso exista
+    clearTimeout(timeoutMensagem);
+
+    // Remove a mensagem automaticamente após 3 segundos
+    timeoutMensagem = setTimeout(() => {
+        alerta.remove();
+    }, 3000);
 }
 
 function mostrarErroBanco(contexto, erro) {
@@ -136,7 +148,7 @@ async function excluirCliente(id) {
   if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return; 
 
   const { error } = await supabase.from('cliente').delete().eq('clienteid', id); 
-  if (error) return mostrarMensagem('Não foi possível excluir o cliente.'); 
+  if (error) return mostrarMensagem('Não foi possível excluir o cliente, pois ele está vinculado a um orçamento.'); 
 
   mostrarMensagem('Cliente excluído com sucesso.', 'success'); 
   carregarClientes(document.querySelector('[data-search]').value); 

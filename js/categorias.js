@@ -23,6 +23,8 @@ function verificarSessao() {
   return true;
 }
 
+let timeoutMensagem;
+
 function mostrarMensagem(texto, tipo = 'danger') {
   let a = document.getElementById('app-alert');
   if (!a) {
@@ -32,6 +34,11 @@ function mostrarMensagem(texto, tipo = 'danger') {
   }
   a.className = `alert alert-${tipo} alert-dismissible fade show app-alert`;
   a.innerHTML = `${texto}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+
+  clearTimeout(timeoutMensagem);
+  timeoutMensagem = setTimeout(() => {
+    a.remove();
+  }, 3000);
 }
 
 function mostrarErroBanco(contexto, erro) {

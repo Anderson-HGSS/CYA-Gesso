@@ -32,6 +32,8 @@ function verificarSessao() {
   return true; 
 }
 
+let timeoutMensagem;
+
 function mensagem(t, tipo = 'danger') { 
   let a = document.getElementById('app-alert'); 
   if (!a) { 
@@ -41,6 +43,11 @@ function mensagem(t, tipo = 'danger') {
   } 
   a.className = `alert alert-${tipo} alert-dismissible fade show app-alert`; 
   a.innerHTML = `${t}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`; 
+
+  clearTimeout(timeoutMensagem);
+  timeoutMensagem = setTimeout(() => {
+    a.remove();
+  }, 3000);
 }
 
 function mostrarErroBanco(contexto, erro) {

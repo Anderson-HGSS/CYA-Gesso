@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_qPjGkoVq70xT2cqCd0jDVw_RJWWxeJg';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = 'cyaGessoUsuarioLogado';
 
+let timeoutMensagem;
+
 function mostrarMensagem(texto, tipo = 'danger') {
   let alerta = document.getElementById('app-alert');
   if (!alerta) {
@@ -13,6 +15,11 @@ function mostrarMensagem(texto, tipo = 'danger') {
   }
   alerta.className = `alert alert-${tipo} alert-dismissible fade show app-alert`;
   alerta.innerHTML = `${texto}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>`;
+
+  clearTimeout(timeoutMensagem);
+  timeoutMensagem = setTimeout(() => {
+    alerta.remove();
+  }, 3000);
 }
 
 function lerSessao() {
