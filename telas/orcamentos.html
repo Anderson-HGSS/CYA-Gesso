@@ -43,6 +43,36 @@
                 display: inline !important;
             }
         }
+        #documento-agrupado { font-family: Arial, sans-serif; color: #111; overflow-wrap: anywhere; }
+        #documento-agrupado table { width: 100%; border-collapse: collapse; }
+        #documento-agrupado th, #documento-agrupado td { padding: 6px; }
+        #documento-agrupado th { border-bottom: 1px solid #777; }
+        #documento-agrupado th:not(:first-child), #documento-agrupado td:not(:first-child) { text-align: right; }
+        #documento-agrupado section { border-top: 1px solid #777; margin-top: 24px; padding-top: 16px; }
+        #documento-agrupado .total-agrupado { border-top: 1px solid #777; margin-top: 24px; padding-top: 16px; text-align: right; }
+
+        @media print {
+            @page orcamentos-agrupados { size: A4; margin: 15mm; }
+            body.impressao-agrupada { height: auto !important; overflow: visible !important; padding: 0 !important; background: white; }
+            body.impressao-agrupada #visualizacaoModal { display: none !important; }
+            body.impressao-agrupada #juntarOrcamentosModal { display: block !important; page: orcamentos-agrupados; }
+            body.impressao-agrupada #juntarOrcamentosModal,
+            #juntarOrcamentosModal .modal-dialog,
+            #juntarOrcamentosModal .modal-content,
+            #juntarOrcamentosModal .modal-body {
+                display: block !important; position: static !important; height: auto !important; max-height: none !important;
+                width: 100% !important; max-width: none !important; overflow: visible !important;
+                margin: 0 !important; padding: 0 !important; transform: none !important;
+                border: 0 !important; box-shadow: none !important; background: white !important;
+            }
+            #juntarOrcamentosModal .modal-header, #juntarOrcamentosModal .modal-footer,
+            #selecao-agrupados, #juntarOrcamentosModal button { display: none !important; }
+            #documento-agrupado .table-responsive { overflow: visible !important; }
+            #documento-agrupado thead { display: table-header-group; }
+            #documento-agrupado tr, #documento-agrupado .total-agrupado,
+            #documento-agrupado p.text-end { break-inside: avoid; page-break-inside: avoid; }
+            #documento-agrupado h2, #documento-agrupado h3 { break-after: avoid; page-break-after: avoid; }
+        }
     </style>
 </head>
 
@@ -141,8 +171,12 @@
                 <div><span class="page-kicker">Comercial</span>
                     <h1 class="page-title">Orçamentos</h1>
                     <p class="page-subtitle">Consulte propostas realizadas ou crie um novo orçamento.</p>
-                </div><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orcamentoModal">+ Novo
-                    Orçamento</button>
+                </div><div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-sm-0">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orcamentoModal">+ Novo
+                        Orçamento</button>
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+                        data-bs-target="#juntarOrcamentosModal">Juntar Orçamentos</button>
+                </div>
             </header>
             <div class="mb-3"><input class="form-control" data-search type="search"
                     placeholder="Pesquisar por número ou cliente..." aria-label="Pesquisar orçamentos"></div>
@@ -236,6 +270,25 @@
                 <div class="modal-body" id="documento-orcamento"></div>
                 <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal">Fechar</button><button
                         class="btn btn-primary" type="button" data-imprimir-orcamento>Imprimir orçamento</button></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="juntarOrcamentosModal" tabindex="-1" aria-labelledby="titulo-agrupados" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="titulo-agrupados">Selecionar orçamentos</h2>
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="selecao-agrupados" class="text-break" aria-live="polite"></div>
+                    <div id="documento-agrupado" hidden></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" type="button" data-bs-dismiss="modal" id="cancelar-agrupados">Cancelar</button>
+                    <button class="btn btn-primary" type="button" data-juntar-selecionados>Juntar selecionados</button>
+                    <button class="btn btn-primary" type="button" data-imprimir-agrupados hidden>Imprimir</button>
+                </div>
             </div>
         </div>
     </div>

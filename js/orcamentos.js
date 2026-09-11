@@ -356,8 +356,112 @@ async function visualizarOrcamento(id) {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('visualizacaoModal')).show();
 }
 
+// Consultas paginadas exclusivas da junção, sem limitar a seleção à página da listagem.
+let requisicaoAgrupados = 0;
+
+async function consultarAgrupados(criarConsulta) {
+  const registros = [];
+  for (let inicio = 0; ; inicio += 500) {
+    const { data, error } = await criarConsulta().range(inicio, inicio + 499);
+    if (error) throw error;
+    registros.push(...data);
+    if (data.length < 500) return registros;
+  }
+}
+
+async function abrirSelecaoAgrupados() {
+  const requisicao = ++requisicaoAgrupados;
+  const lista = document.getElementById('selecao-agrupados');
+  const botao = document.querySelector('[data-juntar-selecionados]');
+  lista.hidden = false;
+  lista.textContent = 'Carregando orçamentos...';
+  botao.hidden = false;
+  botao.disabled = true;
+  document.getElementById('titulo-agrupados').textContent = 'Selecionar orçamentos';
+  document.getElementById('cancelar-agrupados').textContent = 'Cancelar';
+  document.getElementById('documento-agrupado').hidden = true;
+  document.querySelector('[data-imprimir-agrupados]').hidden = true;
+  try {
+    const [orcamentos, clientes] = await Promise.all([
+      consultarAgrupados(() => supabase.from('orcamento').select('orcamentoid, clienteid, obra, dt_orcamento, vl_total_orcamento').order('orcamentoid', { ascending: false })),
+      consultarAgrupados(() => supabase.from('cliente').select('clienteid, nome_cliente').order('clienteid'))
+    ]);
+    if (requisicao !== requisicaoAgrupados) return;
+    const nomes = new Map(clientes.map((c) => [String(c.clienteid), c.nome_cliente]));
+    lista.innerHTML = orcamentos.length ? orcamentos.map((o) =>
+      `<label class="d-flex align-items-start gap-2 border rounded p-3 mb-2">` +
+      `<input class="form-check-input flex-shrink-0" type="checkbox" data-orcamento-agrupar value="${esc(o.orcamentoid)}">` +
+      `<span><strong>Orçamento ${esc(o.orcamentoid)}</strong> — ${esc(nomes.get(String(o.clienteid)) || o.clienteid)}<br>` +
+      `Obra: ${esc(o.obra || '—')}<br>Data: ${dataFormatada(o.dt_orcamento)} — ${moeda(o.vl_total_orcamento)}</span></label>`
+    ).join('') : '<p class="text-secondary">Nenhum orçamento disponível.</p>';
+    botao.disabled = false;
+  } catch (erro) {
+    if (requisicao !== requisicaoAgrupados) return;
+    lista.textContent = 'Não foi possível carregar os orçamentos. Feche e tente novamente.';
+    mostrarErroBanco('Não foi possível carregar a seleção de orçamentos.', erro);
+  }
+}
+
+async function juntarOrcamentosSelecionados() {
+  const ids = [...document.querySelectorAll('[data-orcamento-agrupar]:checked')].map((campo) => campo.value);
+  if (ids.length < 2) return mensagem('Selecione pelo menos dois orçamentos para realizar a junção.');
+  const botao = document.querySelector('[data-juntar-selecionados]');
+  if (botao.disabled) return;
+  botao.disabled = true;
+  const requisicao = ++requisicaoAgrupados;
+  try {
+    const [orcamentos, itens] = await Promise.all([
+      consultarAgrupados(() => supabase.from('orcamento').select('orcamentoid, clienteid, dt_orcamento, obra, ambiente_servico, observacoes, vl_total_orcamento').in('orcamentoid', ids).order('orcamentoid', { ascending: false })),
+      consultarAgrupados(() => supabase.from('orcamento_item').select('orcamentoid, produtodesc, qt_produto, vl_unitario, vl_total').in('orcamentoid', ids).order('orcamentoitemid'))
+    ]);
+    if (requisicao !== requisicaoAgrupados) return;
+    if (orcamentos.length !== ids.length) return mensagem('Um dos orçamentos não está mais disponível. Feche e refaça a seleção.');
+    const clientesIds = [...new Set(orcamentos.map((o) => o.clienteid))];
+    const clientes = await consultarAgrupados(() => supabase.from('cliente').select('clienteid, nome_cliente').in('clienteid', clientesIds).order('clienteid'));
+    if (requisicao !== requisicaoAgrupados) return;
+    const nomes = new Map(clientes.map((c) => [String(c.clienteid), c.nome_cliente]));
+    const totalGeral = orcamentos.reduce((total, o) => total + Number(o.vl_total_orcamento || 0), 0);
+    document.getElementById('documento-agrupado').innerHTML =
+      '<h1 class="text-center fs-4 mb-3">CYA GESSO</h1><h2 class="text-center fs-5 mb-4">ORÇAMENTOS AGRUPADOS</h2>' +
+      '<p>CNPJ: 26.865.625/0001-00<br>Telefone: (44) 9.9837-1440</p>' +
+      '<p class="fw-bold my-4">CONFORME SOLICITAÇÃO, ESTAMOS ENVIANDO NOSSA PROPOSTA COMERCIAL<br>PARA REALIZAÇÃO DE NOSSOS SERVIÇOS</p>' +
+      orcamentos.map((o) => {
+        const itensDoOrcamento = itens.filter((item) => String(item.orcamentoid) === String(o.orcamentoid));
+        return `<section><h2 class="fs-5">ORÇAMENTO Nº ${esc(o.orcamentoid)}</h2>` +
+          `<p><strong>Cliente:</strong> ${esc(nomes.get(String(o.clienteid)) || o.clienteid)}<br>` +
+          `<strong>Obra:</strong> ${esc(o.obra || '—')}<br><strong>Ambiente do serviço:</strong> ${esc(o.ambiente_servico || '—')}<br>` +
+          `<strong>Data:</strong> ${dataFormatada(o.dt_orcamento)}</p><h3 class="fs-6">ITENS</h3>` +
+          '<div class="table-responsive"><table><thead><tr><th>Produto</th><th>Metros²</th><th>Unitário</th><th>Total</th></tr></thead><tbody>' +
+          itensDoOrcamento.map((item) => `<tr><td>${esc(item.produtodesc)}</td><td>${esc(item.qt_produto)}</td><td>${moeda(item.vl_unitario)}</td><td>${moeda(item.vl_total)}</td></tr>`).join('') +
+          `</tbody></table></div><div class="mt-3"><strong>Observações:</strong><p style="white-space:pre-wrap">${esc(o.observacoes || 'Nenhuma observação informada.')}</p></div>` +
+          `<p class="text-end fw-bold">TOTAL DO ORÇAMENTO<br>${moeda(o.vl_total_orcamento)}</p></section>`;
+      }).join('') + `<div class="total-agrupado fs-4 fw-bold">TOTAL GERAL DOS ORÇAMENTOS<br>${moeda(totalGeral)}</div>`;
+    document.getElementById('selecao-agrupados').hidden = true;
+    document.getElementById('documento-agrupado').hidden = false;
+    document.getElementById('titulo-agrupados').textContent = 'Visualização dos Orçamentos Agrupados';
+    document.getElementById('cancelar-agrupados').textContent = 'Fechar';
+    botao.hidden = true;
+    document.querySelector('[data-imprimir-agrupados]').hidden = false;
+    document.body.classList.add('impressao-agrupada');
+    document.querySelector('#juntarOrcamentosModal .modal-body').scrollTop = 0;
+  } catch (erro) {
+    if (requisicao === requisicaoAgrupados) mostrarErroBanco('Não foi possível juntar os orçamentos.', erro);
+  } finally {
+    if (requisicao === requisicaoAgrupados) botao.disabled = false;
+  }
+}
+
 if (verificarSessao()) { 
   configurarSaida(); 
+  document.getElementById('juntarOrcamentosModal').addEventListener('show.bs.modal', abrirSelecaoAgrupados);
+  document.querySelector('[data-juntar-selecionados]').addEventListener('click', juntarOrcamentosSelecionados);
+  document.querySelector('[data-imprimir-agrupados]').addEventListener('click', () => window.print());
+  document.getElementById('juntarOrcamentosModal').addEventListener('hidden.bs.modal', () => {
+    requisicaoAgrupados++;
+    document.body.classList.remove('impressao-agrupada');
+    document.getElementById('selecao-agrupados').innerHTML = '';
+    document.getElementById('documento-agrupado').innerHTML = '';
+  });
   carregarOpcoes().then(() => { 
     carregarOrcamentos(); 
     adicionarItem(); 
