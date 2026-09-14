@@ -111,13 +111,36 @@ async function carregarClientes(pesquisa = '') {
     : '<tr><td colspan="5" class="text-center text-secondary py-4">Nenhum registro encontrado.</td></tr>';
 }
 
+function atualizarDocumentoCliente() {
+  const tipo = document.getElementById('cliente-tipo').value;
+  const campo = document.getElementById('cliente-cpf');
+  const juridica = tipo === 'J';
+  const fisica = tipo === 'F';
+  document.querySelector('label[for="cliente-cpf"]').textContent =
+    `${juridica ? 'CNPJ' : fisica ? 'CPF' : 'CPF / CNPJ'}`;
+  campo.placeholder = juridica ? '00.000.000/0000-00' : fisica ? '000.000.000-00' : 'Selecione o tipo de cliente';
+  campo.maxLength = fisica ? 14 : 18;
+  const digitos = campo.value.replace(/\D/g, '').slice(0, fisica ? 11 : 14);
+  campo.value = juridica
+    ? digitos.replace(/^(\d{2})(\d)/, '$1.$2')
+      .replace(/^(\d{2}\.\d{3})(\d)/, '$1.$2')
+      .replace(/(\.\d{3})(\d)/, '$1/$2')
+      .replace(/(\/\d{4})(\d)/, '$1-$2')
+    : fisica
+      ? digitos.replace(/^(\d{3})(\d)/, '$1.$2')
+        .replace(/^(\d{3}\.\d{3})(\d)/, '$1.$2')
+        .replace(/(\.\d{3})(\d)/, '$1-$2')
+      : digitos;
+}
+
 async function cadastrarCliente() {
   const nome_cliente = document.getElementById('cliente-nome').value.trim(); 
   const tipo_cliente = document.getElementById('cliente-tipo').value; 
+  const cpf_cnpj_cliente = document.getElementById('cliente-cpf').value.trim() || null;
 
   if (!nome_cliente || !tipo_cliente) return mostrarMensagem('Preencha nome e tipo de cliente.');
 
-  const dados = { nome_cliente, tipo_cliente };
+  const dados = { nome_cliente, tipo_cliente, cpf_cnpj_cliente };
   const consulta = clienteEmEdicao 
     ? supabase.from('cliente').update(dados).eq('clienteid', clienteEmEdicao) 
     : supabase.from('cliente').insert(dados);
@@ -140,6 +163,8 @@ async function editarCliente(id) {
   clienteEmEdicao = data.clienteid; 
   document.getElementById('cliente-nome').value = data.nome_cliente || ''; 
   document.getElementById('cliente-tipo').value = data.tipo_cliente || ''; 
+  document.getElementById('cliente-cpf').value = data.cpf_cnpj_cliente || '';
+  atualizarDocumentoCliente();
   document.querySelector('#clienteModal .modal-title').textContent = 'Editar cliente'; 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('clienteModal')).show(); 
 }
@@ -157,6 +182,9 @@ async function excluirCliente(id) {
 if (verificarSessao()) { 
   configurarSaida(); 
   carregarClientes(); 
+  atualizarDocumentoCliente();
+  document.getElementById('cliente-tipo').addEventListener('change', atualizarDocumentoCliente);
+  document.getElementById('cliente-cpf').addEventListener('input', atualizarDocumentoCliente);
 
   document.querySelector('[data-search]').addEventListener('input', (evento) => { paginaAtual = 1; carregarClientes(evento.target.value); }); 
   document.querySelector('[data-save]').addEventListener('click', cadastrarCliente); 
@@ -170,6 +198,7 @@ if (verificarSessao()) {
   document.getElementById('clienteModal').addEventListener('hidden.bs.modal', () => { 
     clienteEmEdicao = null; 
     document.querySelector('#clienteModal form').reset(); 
+    atualizarDocumentoCliente();
     document.querySelector('#clienteModal .modal-title').textContent = 'Novo cliente'; 
   }); 
 }
