@@ -1,20 +1,20 @@
 {
-  "name": "Nome Completo da Empresa ou Sistema",
-  "short_name": "Nome Curto",
+  "name": "CYA Gesso",
+  "short_name": "CYA",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/caminho/seu-icone-192x192.png",
+      "src": "/Imagens/logo192x192.jpeg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "/caminho/seu-icone-512x512.png",
+      "src": "/Imagens/logo512x512.jpeg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
