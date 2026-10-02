@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'https://bymwinebienzvaimiadh.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_qPjGkoVq70xT2cqCd0jDVw_RJWWxeJg';
+const SUPABASE_URL = 'https://ywbgnmxcmsxilusmjsnl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_kcxdLnfpL_qXbf0wlFCI1g_RgEn9ATN';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = 'cyaGessoUsuarioLogado';
 let usuarioEmEdicao = null;
